@@ -33,10 +33,10 @@ frc::Trajectory trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirec
   // Start compressor
   m_compressor.Start();
   // Initialize solenoids
-  m_intakeright.Set(frc::DoubleSolenoid::Value::kOff);
-  m_intakeleft.Set(frc::DoubleSolenoid::Value::kOff);
-  m_colorwheel.Set(frc::DoubleSolenoid::Value::kOff);
-  m_uptake.Set(frc::DoubleSolenoid::Value::kOff);
+  m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
+  m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+  m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
+  m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
 }
 
 /**
