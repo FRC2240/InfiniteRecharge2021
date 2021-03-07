@@ -32,7 +32,20 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameDefault = "Default";
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
-  static const int backrightMotorDeviceID = 1, frontrightMotorDeviceID = 2, backleftMotorDeviceID = 3, frontleftMotorDeviceID = 4, hopperMotorDeviceID = 5, rightshooterMotorDeviceID = 6, leftshooterMotorDeviceID = 7, turretMotorDeviceID = 8, raisingMotorDeviceID = 9, rightelevatingMotorDeviceID = 10, leftelevatingMotorDeviceID = 11, intakeMotorDeviceID = 12, colorwheelMotorDeviceID = 13;
+
+  static const int intakeMotorDeviceID         =  1;
+  static const int hopperMotorDeviceID         =  2;
+  static const int colorwheelMotorDeviceID     =  3;
+  static const int raisingMotorDeviceID        =  4;
+  static const int rightelevatingMotorDeviceID =  5;
+  static const int rightshooterMotorDeviceID   =  6;
+  static const int leftelevatingMotorDeviceID  =  7;
+  static const int leftshooterMotorDeviceID    =  8;
+  static const int frontrightMotorDeviceID     =  9;
+  static const int backrightMotorDeviceID      = 10;
+  static const int turretMotorDeviceID         = 11;
+  static const int frontleftMotorDeviceID      = 12;
+  static const int backleftMotorDeviceID       = 13;
 
 //drivebase motors (looking from the front)//
   rev::CANSparkMax m_backrightMotor{backrightMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
@@ -73,9 +86,10 @@ class Robot : public frc::TimedRobot {
   frc::Joystick m_stick{0};
   
   //pneumatics//
-  frc::DoubleSolenoid m_uptake{0, 7};
-  frc::DoubleSolenoid m_intakeleft{1, 6};
-  frc::DoubleSolenoid m_intakeright{2, 5};
-  frc::DoubleSolenoid m_colorwheel{3, 4};
+  frc::DoubleSolenoid m_intakeleft{0, 7};
+  frc::DoubleSolenoid m_intakeright{1, 6};
+  frc::DoubleSolenoid m_colorwheel{2, 5};
+  frc::DoubleSolenoid m_uptake{3, 4};
+
   frc::Compressor m_compressor;
 };
