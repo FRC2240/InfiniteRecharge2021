@@ -97,6 +97,27 @@ void Robot::TeleopPeriodic() {
   double move   = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(2);
   m_robotDrive.ArcadeDrive(move, rotate);
+
+  if (m_stick.GetRawButton(1))
+  {
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+  } else {
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
+  }
+
+  if (m_stick.GetRawButton(2)) {
+    m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+  } else {
+    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+  }
+
+  if (m_stick.GetRawButton(3)) {
+    m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
+  } else {
+    m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
+  }  
 }
 
 void Robot::DisabledInit() {}
