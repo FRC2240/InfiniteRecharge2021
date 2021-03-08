@@ -10,28 +10,34 @@
 
 void Robot::RobotInit()
 {
+  /* Add this section back whrn ready for Pathweaver
+  wpi::SmallString<64> deployDirectory;
+  frc::filesystem::GetDeployDirectory(deployDirectory);
+  wpi::sys::path::append(deployDirectory, "paths");
+  wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
 
-wpi::SmallString<64> deployDirectory;
-frc::filesystem::GetDeployDirectory(deployDirectory);
-wpi::sys::path::append(deployDirectory, "paths");
-wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
-
-frc::Trajectory trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  frc::Trajectory trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);*/
 
   m_backleftMotor.RestoreFactoryDefaults();
   m_backrightMotor.RestoreFactoryDefaults();
   m_frontleftMotor.RestoreFactoryDefaults();
   m_frontrightMotor.RestoreFactoryDefaults();
 
-  // Set back motors to follow front motors
-  m_backleftMotor.Follow(m_frontleftMotor, true);
-  m_backrightMotor.Follow(m_frontrightMotor, true);
   m_backleftMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
   m_backrightMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
-  //Set shooter motors equal
+  m_frontleftMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+  m_frontrightMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+
+  // Set back motors to follow front motors
+  m_backleftMotor.Follow(m_frontleftMotor);
+  m_backrightMotor.Follow(m_frontrightMotor);
+  
+  // Set shooter motors equal (and inverted)
   m_leftshooterMotor.Follow(m_rightshooterMotor, true);
+
   // Start compressor
   m_compressor.Start();
+  
   // Initialize solenoids
   m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
   m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
@@ -134,7 +140,7 @@ void Robot::TestPeriodic()
 
   if (shooterButton)
   {
-    m_rightshooterMotor.Set(1.0);
+    m_rightshooterMotor.Set(-1.0);
   }
   else
   {
@@ -174,11 +180,11 @@ bool uptakeButton = m_stick.GetRawButton(4);
 
 if (uptakeButton)
 {
-  m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+  m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
 }
 else
 {
-  m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+  m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
 }
   // color wheel
   bool colorWheelTest = m_stick.GetRawButton(1);
@@ -197,12 +203,13 @@ else
     m_intakeMotor.Set(0);
   }
   // climber
+  /*
   bool raisingButton = m_stick.GetRawButton(3);
   if (raisingButton) {
-    m_rightelevatingMotor.Set(1.0);
+    m_raisingMotor.Set(1.0);
   }
   else {
-    m_rightelevatingMotor.Set(0);
+    m_raisingMotor.Set(0);
   }
   bool leftClimberButton = m_stick.GetRawButton(4);
   if (leftClimberButton){
@@ -218,7 +225,59 @@ else
   else {
     m_rightelevatingMotor.Set(0);
   }
-}
+
+*/
+//frontright
+
+  bool frontrightButton = m_stick.GetRawButton(6);
+
+  if (frontrightButton)
+  {
+    m_frontrightMotor.Set(1.0);
+  }
+  else
+  {
+    m_frontrightMotor.Set(0.0);
+  }
+  //backright
+
+  bool backrightButton = m_stick.GetRawButton(7);
+
+  if (backrightButton)
+  {
+    m_backrightMotor.Set(1.0);
+  }
+  else
+  {
+    m_backrightMotor.Set(0.0);
+  }
+  //frontleft
+
+  bool frontleftButton = m_stick.GetRawButton(8);
+
+  if (frontleftButton)
+  {
+    m_frontleftMotor.Set(1.0);
+  }
+  else
+  {
+    m_frontleftMotor.Set(0.0);
+  }
+
+  //backleft
+  bool backleftButton = m_stick.GetRawButton(9);
+
+  if (backleftButton)
+  {
+    m_backleftMotor.Set(1.0);
+  }
+  else
+  {
+    m_backleftMotor.Set(0.0);
+  }
+
+
+  }
 #ifndef RUNNING_FRC_TESTS
 int main()
 {
