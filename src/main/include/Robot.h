@@ -51,7 +51,7 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax m_backrightMotor{backrightMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_frontrightMotor{frontrightMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_backleftMotor{backleftMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax m_frontleftMotor{backleftMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_frontleftMotor{frontleftMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANEncoder m_backrightEncoder = m_backrightMotor.GetEncoder();
   rev::CANEncoder m_frontrightEncoder = m_frontrightMotor.GetEncoder();
   rev::CANEncoder m_backleftEncoder = m_backleftMotor.GetEncoder();
