@@ -112,6 +112,16 @@ void Robot::TeleopPeriodic() {
   }
 
   else {
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeMotor.Set(0.0);
+    m_hopperMotor.Set(0.0);
+
+  }
+
+  bool releasegatherButton = m_stick.GetRawButtonReleased(1);
+
+  if (releasegatherButton) {
     timer = 0;
     timer ++;
     m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
@@ -129,6 +139,7 @@ void Robot::TeleopPeriodic() {
   }
 
 }
+
 
 
 
