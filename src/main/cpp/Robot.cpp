@@ -123,6 +123,46 @@ void Robot::TeleopPeriodic() {
     m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
   } else {
     m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
+  }
+  
+    //pipeline code
+
+  bool gatherButton = m_stick.GetRawButton(4); 
+  
+  static int timer = 0;
+
+  if (gatherButton) {
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
+    m_intakeMotor.Set(1.0);
+    m_hopperMotor.Set(1.0);
+  }
+
+  else {
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeMotor.Set(0.0);
+    m_hopperMotor.Set(0.0);
+
+  }
+
+  bool releasegatherButton = m_stick.GetRawButtonReleased(4);
+
+  if (releasegatherButton) {
+    timer = 0;
+    timer ++;
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeMotor.Set(0.0);
+    if (timer <= 1000) {
+      m_hopperMotor.Set(1.0);
+    }
+    else {
+      m_hopperMotor.Set(0.0);
+    }
+
+
+
   }  
 }
 
