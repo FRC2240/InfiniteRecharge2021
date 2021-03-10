@@ -129,7 +129,7 @@ void Robot::TeleopPeriodic() {
 
   bool gatherButton = m_stick.GetRawButton(4); 
   
-  static int timer = 0;
+  
 
   if (gatherButton) {
     m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
@@ -154,7 +154,7 @@ void Robot::TeleopPeriodic() {
     m_intakeMotor.Set(0.0);
     
     //hopper runs for some amount of time after button is released
-    for (int time = 0; time < 1000; time++) {
+    for (int time = 0; time < 200; time++) {
       m_hopperMotor.Set(1.0);
     }
     m_hopperMotor.Set(0.0);
