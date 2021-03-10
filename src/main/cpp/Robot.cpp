@@ -31,13 +31,23 @@ void Robot::RobotInit()
   // Set back motors to follow front motors
   m_backleftMotor.Follow(m_frontleftMotor);
   m_backrightMotor.Follow(m_frontrightMotor);
-  
+
   // Set shooter motors equal (and inverted)
   m_leftshooterMotor.Follow(m_rightshooterMotor, true);
 
+  // Initialize PID coeffiecients
+  InitializePIDControllers();
+
+  // Turret soft stops
+  m_turretEncoder.SetPosition(0.0);
+  m_turretMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_turretMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
+  m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, -15.0);
+  m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15.0);
+
   // Start compressor
   m_compressor.Start();
-  
+
   // Initialize solenoids
   m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
   m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
@@ -97,68 +107,79 @@ void Robot::AutonomousPeriodic()
 
 void Robot::TeleopInit() {}
 
-void Robot::TeleopPeriodic() {
-
-    // read drive input from joystick
-  double move   = m_stick.GetRawAxis(1);
-  double rotate = m_stick.GetRawAxis(2);
+void Robot::TeleopPeriodic()
+{
+  // read drive input from joystick
+  double move = m_stick.GetRawAxis(1);
+  double rotate = m_stick.GetRawAxis(4);
   m_robotDrive.ArcadeDrive(move, rotate);
 
-  if (m_stick.GetRawButton(1))
-  {
-    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
-    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
-  } else {
-    m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
-    m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
-  }
+  // Shooting?
+  if (fabs(m_stick.GetRawAxis(3)) > 0.75) {
+    m_table->PutNumber("pipeline", 0); // Enable targeting pipeline of Limelight
 
-  if (m_stick.GetRawButton(2)) {
-    m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-  } else {
+    // Is target locked?
+    if (LimelightTracking()) {
+      // Calculate distance to target from Limelight data
+      double ty = m_table->GetNumber("ty", 0.0);
+      double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
+      double rpm = CalculateRPM(distance);
+
+      m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+
+      // Enable uptake and hopper if we're at 99.5% of desired shooter speed
+      if (m_rightshooterEncoder.GetVelocity() > (rpm * 0.995)) {
+          m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+          m_hopperMotor.Set(1.0);
+      } else {
+          m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+          m_hopperMotor.Set(0.0);
+      }
+    }
+  } else { // Not shooting
+    m_table->PutNumber("pipeline", 1); // Set driving pipeline of Limelight
+
+    // Shooter off, Hopper off, Uptake down, and Turret centered
+    m_rightshooterMotor.Set(0.0);
+    m_hopperMotor.Set(0.0);
     m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+    m_turretPID.SetReference(0, rev::ControlType::kPosition);
   }
 
-  if (m_stick.GetRawButton(3)) {
-    m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
-  } else {
-    m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
-  }
-  
-    //pipeline code
+  //pipeline code
 
-  bool gatherButton = m_stick.GetRawButton(4); 
-  
-  
+  bool gatherButton = m_stick.GetRawButton(4);
 
-  if (gatherButton) {
+  if (gatherButton)
+  {
     m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
     m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
     m_intakeMotor.Set(1.0);
     m_hopperMotor.Set(1.0);
   }
-
-  else {
+  else
+  {
     m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
     m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
     m_intakeMotor.Set(0.0);
     m_hopperMotor.Set(0.0);
-
   }
 
   bool releasegatherButton = m_stick.GetRawButtonReleased(4);
 
-  if (releasegatherButton) {
+  if (releasegatherButton)
+  {
     m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
     m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
     m_intakeMotor.Set(0.0);
-    
+
     //hopper runs for some amount of time after button is released
-    for (int time = 0; time < 200; time++) {
+    for (int time = 0; time < 200; time++)
+    {
       m_hopperMotor.Set(1.0);
     }
     m_hopperMotor.Set(0.0);
-  }  
+  }
 }
 
 void Robot::DisabledInit() {}
@@ -169,6 +190,7 @@ void Robot::TestInit() {}
 
 void Robot::TestPeriodic()
 {
+  std::cout << "turret: " << m_turretEncoder.GetPosition() << std::endl;
   //shooter//
 
   bool shooterButton = m_stick.GetRawButton(1);
@@ -182,59 +204,62 @@ void Robot::TestPeriodic()
     m_rightshooterMotor.Set(0.0);
   }
 
+  //hopper//
 
-//hopper//
+  bool hopperButton = m_stick.GetRawButton(2);
 
-bool hopperButton = m_stick.GetRawButton(2);
+  if (hopperButton)
+  {
+    m_hopperMotor.Set(1.0);
+  }
+  else
+  {
+    m_hopperMotor.Set(0.0);
+  }
 
-if (hopperButton)
-{
-  m_hopperMotor.Set(1.0);
-}
-else
-{
-  m_hopperMotor.Set(0.0);
-}
+  //turrett//
 
-//turrett//
+  bool turretButton = m_stick.GetRawButton(3);
 
-bool turretButton = m_stick.GetRawButton(3);
+  if (turretButton)
+  {
+    m_turretMotor.Set(1.0);
+  }
+  else
+  {
+    m_turretMotor.Set(0.0);
+  }
 
-if (turretButton)
-{
-  m_turretMotor.Set(1.0);
-}
-else
-{
-  m_turretMotor.Set(0.0);
-}
+  //uptake//
 
-//uptake//
+  bool uptakeButton = m_stick.GetRawButton(4);
 
-bool uptakeButton = m_stick.GetRawButton(4);
-
-if (uptakeButton)
-{
-  m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-}
-else
-{
-  m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
-}
+  if (uptakeButton)
+  {
+    m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+  }
+  else
+  {
+    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+  }
   // color wheel
   bool colorWheelTest = m_stick.GetRawButton(1);
-  if (colorWheelTest){
+  if (colorWheelTest)
+  {
     m_colorwheelMotor.Set(1.0);
   }
-  else {
+  else
+  {
     m_colorwheelMotor.Set(0);
   }
   // intake
   bool intakeButton = m_stick.GetRawButton(2);
-  if (intakeButton) {
+  if (intakeButton)
+  {
     m_intakeMotor.Set(1.0);
   }
-  else {
+  else
+  {
     m_intakeMotor.Set(0);
   }
   // climber
@@ -262,7 +287,7 @@ else
   }
 
 */
-//frontright
+  //frontright
 
   bool frontrightButton = m_stick.GetRawButton(6);
 
@@ -310,9 +335,66 @@ else
   {
     m_backleftMotor.Set(0.0);
   }
+}
 
+bool Robot::LimelightTracking()
+{
+  bool shoot = false;
 
+  // Proportional Steering Constant:
+  // If your robot doesn't turn fast enough toward the target, make this number bigger
+  // If your robot oscillates (swings back and forth past the target) make this smaller
+  const double STEER_K   = 0.03;
+  const double MAX_STEER = 0.2;
+
+  double tx = m_table->GetNumber("tx", 0.0);
+  double tv = m_table->GetNumber("tv", 0.0);
+
+  double limelightTurnCmd = 0.0;
+
+  if (tv > 0.0)
+  {
+    // Proportional steering
+    limelightTurnCmd = (tx + tx_OFFSET) * STEER_K;
+    limelightTurnCmd = std::clamp(limelightTurnCmd, -MAX_STEER, MAX_STEER);
+    if (tx < 0.25) {
+      shoot = true;
+    }
   }
+
+  m_turretMotor.Set(limelightTurnCmd);
+  return shoot;
+}
+
+// Calculate the RPM from the distance
+double Robot::CalculateRPM(double d) {
+  double rpm;
+
+  if (d < 125.0) {
+    rpm = (-45.671 * d) + 14322.0;
+  } else {
+    rpm = 0.028052 * d * d - 8.5977 * d + 2946.0;
+  }
+  return rpm;
+}
+
+// Initialize the PID coefficients
+void Robot::InitializePIDControllers() {
+  m_shooterPID.SetP(m_shooterPIDCoeff.kP);
+  m_shooterPID.SetI(m_shooterPIDCoeff.kI);
+  m_shooterPID.SetD(m_shooterPIDCoeff.kD);
+  m_shooterPID.SetIZone(m_shooterPIDCoeff.kIz);
+  m_shooterPID.SetFF(m_shooterPIDCoeff.kFF);
+  m_shooterPID.SetOutputRange(m_shooterPIDCoeff.kMinOutput, m_shooterPIDCoeff.kMaxOutput);
+
+  m_turretPID.SetP(m_turretPIDCoeff.kP);
+  m_turretPID.SetI(m_turretPIDCoeff.kI);
+  m_turretPID.SetD(m_turretPIDCoeff.kD);
+  m_turretPID.SetIZone(m_turretPIDCoeff.kIz);
+  m_turretPID.SetFF(m_turretPIDCoeff.kFF);
+  m_turretPID.SetOutputRange(m_turretPIDCoeff.kMinOutput, m_turretPIDCoeff.kMaxOutput); 
+}
+
 #ifndef RUNNING_FRC_TESTS
 int main()
 {
