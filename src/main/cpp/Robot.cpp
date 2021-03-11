@@ -110,9 +110,9 @@ void Robot::TeleopInit() {}
 void Robot::TeleopPeriodic()
 {
   // read drive input from joystick
-  double move = m_stick.GetRawAxis(1);
+  double move   = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
-  m_robotDrive.ArcadeDrive(move, rotate);
+  m_robotDrive.ArcadeDrive(move, -rotate);
 
   // Shooting?
   if (fabs(m_stick.GetRawAxis(3)) > 0.75) {
