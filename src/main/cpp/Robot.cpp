@@ -165,21 +165,20 @@ void Robot::TeleopPeriodic()
     m_hopperMotor.Set(0.0);
   }
 
+  
+
   bool releasegatherButton = m_stick.GetRawButtonReleased(4);
-
-  if (releasegatherButton)
-  {
-    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
-    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+  ++m_gatherTimer;
+  if (releasegatherButton) {
+    m_gatherTimer = 0;
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
     m_intakeMotor.Set(0.0);
-
-    //hopper runs for some amount of time after button is released
-    for (int time = 0; time < 200; time++)
-    {
-      m_hopperMotor.Set(1.0);
-    }
-    m_hopperMotor.Set(0.0);
   }
+  if (m_gatherTimer > 200) {
+     m_hopperMotor.Set(0.0);
+  }
+
 }
 
 void Robot::DisabledInit() {}
