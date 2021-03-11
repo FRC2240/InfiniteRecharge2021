@@ -109,6 +109,10 @@ class Robot : public frc::TimedRobot {
 
   frc::Compressor m_compressor;
 
+  //timer//
+
+  int m_gatherTimer = 0;
+
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
   double tx_OFFSET = 3.0;
