@@ -42,8 +42,8 @@ void Robot::RobotInit()
   m_turretEncoder.SetPosition(0.0);
   m_turretMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
   m_turretMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
-  m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, -15.0);
-  m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15.0);
+  m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, -67.0);
+  m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 67.0);
 
   // Start compressor
   m_compressor.Start();
