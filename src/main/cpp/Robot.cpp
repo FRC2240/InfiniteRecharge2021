@@ -110,75 +110,81 @@ void Robot::TeleopInit() {}
 void Robot::TeleopPeriodic()
 {
   // read drive input from joystick
-  double move   = m_stick.GetRawAxis(1);
+  double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
   m_robotDrive.ArcadeDrive(move, -rotate);
 
   // Shooting?
-  if (fabs(m_stick.GetRawAxis(3)) > 0.75) {
+  if (fabs(m_stick.GetRawAxis(3)) > 0.75)
+  {
     m_table->PutNumber("pipeline", 0); // Enable targeting pipeline of Limelight
 
     // Is target locked?
-    if (LimelightTracking()) {
+    if (LimelightTracking())
+    {
       // Calculate distance to target from Limelight data
       double ty = m_table->GetNumber("ty", 0.0);
       double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
       double rpm = CalculateRPM(distance);
 
-      m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+      m_shooterPID.SetReference(-rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+      //std::cout << "want = " << fabs(rpm) << " got = " << fabs(m_rightshooterEncoder.GetVelocity()) << std::endl;
 
       // Enable uptake and hopper if we're at 99.5% of desired shooter speed
-      if (m_rightshooterEncoder.GetVelocity() > (rpm * 0.995)) {
-          m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-          m_hopperMotor.Set(1.0);
-      } else {
-          m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
-          m_hopperMotor.Set(0.0);
+      if (fabs(m_rightshooterEncoder.GetVelocity()) > fabs(rpm * 0.96))
+      {
+        m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+        m_hopperMotor.Set(1.0);
+      }
+      else
+      {
+        m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+        m_hopperMotor.Set(0.0);
       }
     }
-  } else { // Not shooting
-    m_table->PutNumber("pipeline", 1); // Set driving pipeline of Limelight
-
-    // Shooter off, Hopper off, Uptake down, and Turret centered
-    m_rightshooterMotor.Set(0.0);
-    m_hopperMotor.Set(0.0);
-    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
-    m_turretPID.SetReference(0, rev::ControlType::kPosition);
-  }
-
-  //pipeline code
-
-  bool gatherButton = m_stick.GetRawButton(4);
-
-  if (gatherButton)
-  {
-    m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
-    m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
-    m_intakeMotor.Set(1.0);
-    m_hopperMotor.Set(1.0);
   }
   else
   {
-    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
-    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
-    m_intakeMotor.Set(0.0);
-    m_hopperMotor.Set(0.0);
-  }
+    // Not shooting: Shooter off, Hopper off, Uptake down, and Turret centered
+    m_table->PutNumber("pipeline", 1); // Set driving pipeline of Limelight
+    m_rightshooterMotor.Set(0.0);
+    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+    m_turretPID.SetReference(0, rev::ControlType::kPosition);
 
-  
+    //pipeline code
 
-  bool releasegatherButton = m_stick.GetRawButtonReleased(4);
-  ++m_gatherTimer;
-  if (releasegatherButton) {
-    m_gatherTimer = 0;
-    m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
-    m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
-    m_intakeMotor.Set(0.0);
-  }
-  if (m_gatherTimer > 200) {
-     m_hopperMotor.Set(0.0);
-  }
+    bool gatherButton = m_stick.GetRawButton(4);
 
+    if (gatherButton)
+    {
+      m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+      m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+      m_intakeMotor.Set(-1.0);
+      m_hopperMotor.Set(0.5);
+      m_gatherTimer = 0;
+    }
+    else
+    {
+      m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+      m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
+      m_intakeMotor.Set(0.0);
+    }
+
+    bool releasegatherButton = m_stick.GetRawButtonReleased(4);
+    ++m_gatherTimer;
+    if (releasegatherButton)
+    {
+      m_gatherTimer = 0;
+      m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+      m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
+      m_intakeMotor.Set(0.0);
+    }
+
+    if (m_gatherTimer > 200)
+    {
+      m_hopperMotor.Set(0.0);
+    }
+  }
 }
 
 void Robot::DisabledInit() {}
@@ -343,8 +349,8 @@ bool Robot::LimelightTracking()
   // Proportional Steering Constant:
   // If your robot doesn't turn fast enough toward the target, make this number bigger
   // If your robot oscillates (swings back and forth past the target) make this smaller
-  const double STEER_K   = 0.03;
-  const double MAX_STEER = 0.2;
+  const double STEER_K = 0.04;
+  const double MAX_STEER = 0.5;
 
   double tx = m_table->GetNumber("tx", 0.0);
   double tv = m_table->GetNumber("tv", 0.0);
@@ -356,7 +362,8 @@ bool Robot::LimelightTracking()
     // Proportional steering
     limelightTurnCmd = (tx + tx_OFFSET) * STEER_K;
     limelightTurnCmd = std::clamp(limelightTurnCmd, -MAX_STEER, MAX_STEER);
-    if (tx < 0.25) {
+    if (tx < 0.25)
+    {
       shoot = true;
     }
   }
@@ -366,19 +373,24 @@ bool Robot::LimelightTracking()
 }
 
 // Calculate the RPM from the distance
-double Robot::CalculateRPM(double d) {
+double Robot::CalculateRPM(double d)
+{
   double rpm;
 
-  if (d < 125.0) {
+  if (d < 125.0)
+  {
     rpm = (-45.671 * d) + 14322.0;
-  } else {
+  }
+  else
+  {
     rpm = 0.028052 * d * d - 8.5977 * d + 2946.0;
   }
   return rpm;
 }
 
 // Initialize the PID coefficients
-void Robot::InitializePIDControllers() {
+void Robot::InitializePIDControllers()
+{
   m_shooterPID.SetP(m_shooterPIDCoeff.kP);
   m_shooterPID.SetI(m_shooterPIDCoeff.kI);
   m_shooterPID.SetD(m_shooterPIDCoeff.kD);
@@ -391,7 +403,7 @@ void Robot::InitializePIDControllers() {
   m_turretPID.SetD(m_turretPIDCoeff.kD);
   m_turretPID.SetIZone(m_turretPIDCoeff.kIz);
   m_turretPID.SetFF(m_turretPIDCoeff.kFF);
-  m_turretPID.SetOutputRange(m_turretPIDCoeff.kMinOutput, m_turretPIDCoeff.kMaxOutput); 
+  m_turretPID.SetOutputRange(m_turretPIDCoeff.kMinOutput, m_turretPIDCoeff.kMaxOutput);
 }
 
 #ifndef RUNNING_FRC_TESTS

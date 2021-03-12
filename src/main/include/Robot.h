@@ -115,7 +115,7 @@ class Robot : public frc::TimedRobot {
 
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
-  double tx_OFFSET = 3.0;
+  double tx_OFFSET = 0.0; // old = 3.0
 
   // PID coefficient structure
   struct pidCoeff {
@@ -131,5 +131,5 @@ class Robot : public frc::TimedRobot {
   // DETERMINE THESE EXPERIMENTALLY!!!!!!!
   // pidCoeff ----------------{kP, kI, kD, kIz, kFF, kMinOutput, kMaxOutput}
   pidCoeff m_shooterPIDCoeff {0.0005, 0.0, 0.009, 0.0, 0.000199, -1.0, 1.0};
-  pidCoeff m_turretPIDCoeff {0.03, 0.0, 0.0, 0.0, 0.0, -1.0, 1.0};
+  pidCoeff m_turretPIDCoeff {0.02, 0.0, 0.0, 0.0, 0.0, -0.5, 0.5};
 };
