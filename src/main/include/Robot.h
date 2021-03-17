@@ -16,6 +16,28 @@
 #include <wpi/SmallString.h>
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
+// These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
+// These characterization values MUST be determined either experimentally or
+// theoretically for *your* robot's drive. The Robot Characterization
+// Toolsuite provides a convenient tool for obtaining these values for your
+// robot.
+constexpr auto ks = 0.22_V;
+constexpr auto kv = 1.98 * 1_V * 1_s / 1_m;
+constexpr auto ka = 0.2 * 1_V * 1_s * 1_s / 1_m;
+
+// Example value only - as above, this must be tuned for your drive!
+constexpr double kPDriveVel = 8.5;
+
+constexpr auto kTrackwidth = 0.69_m;
+//Error here: extern const frc::DifferentialDriveKinematics kDriveKinematics;
+
+constexpr auto kMaxSpeed = 11.5_mps;
+constexpr auto kMaxAcceleration = 3.06_mps_sq;
+
+// Reasonable baseline values for a RAMSETE follower in units of meters and
+// seconds
+constexpr double kRamseteB = 2;
+constexpr double kRamseteZeta = 0.7;
 
 #include "rev/CANSparkMax.h"
 
