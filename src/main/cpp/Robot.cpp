@@ -33,7 +33,7 @@ void Robot::RobotInit()
   m_backrightMotor.Follow(m_frontrightMotor);
 
   // Set shooter motors equal (and inverted)
-  m_leftshooterMotor.Follow(m_rightshooterMotor, true);
+  m_rightshooterMotor.Follow(m_leftshooterMotor, true);
 
   // Initialize PID coeffiecients
   InitializePIDControllers();
@@ -53,6 +53,15 @@ void Robot::RobotInit()
   m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
   m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
   m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+
+  frc::SmartDashboard::PutNumber("Shooter Speed", m_overrideShooterSpeed);
+  frc::SmartDashboard::PutNumber("P Gain", m_shooterPIDCoeff.kP);
+  frc::SmartDashboard::PutNumber("I Gain", m_shooterPIDCoeff.kI);
+  frc::SmartDashboard::PutNumber("D Gain", m_shooterPIDCoeff.kD);
+  frc::SmartDashboard::PutNumber("I Zone", m_shooterPIDCoeff.kIz);
+  frc::SmartDashboard::PutNumber("Feed Forward", m_shooterPIDCoeff.kFF);
+  frc::SmartDashboard::PutNumber("Max Output", m_shooterPIDCoeff.kMaxOutput);
+  frc::SmartDashboard::PutNumber("Min Output", m_shooterPIDCoeff.kMinOutput);
 }
 
 /**
@@ -105,7 +114,19 @@ void Robot::AutonomousPeriodic()
   }
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+  m_overrideShooterSpeed       = frc::SmartDashboard::GetNumber("Shooter Speed", 0);
+
+  m_shooterPIDCoeff.kP         = frc::SmartDashboard::GetNumber("P Gain", m_shooterPIDCoeff.kP);
+  m_shooterPIDCoeff.kI         = frc::SmartDashboard::GetNumber("I Gain", m_shooterPIDCoeff.kI);
+  m_shooterPIDCoeff.kD         = frc::SmartDashboard::GetNumber("D Gain", m_shooterPIDCoeff.kD);
+  m_shooterPIDCoeff.kIz        = frc::SmartDashboard::GetNumber("I Zone", m_shooterPIDCoeff.kIz);
+  m_shooterPIDCoeff.kFF        = frc::SmartDashboard::GetNumber("Feed Forward", m_shooterPIDCoeff.kFF);
+  m_shooterPIDCoeff.kMaxOutput = frc::SmartDashboard::GetNumber("Max Output", m_shooterPIDCoeff.kMaxOutput);
+  m_shooterPIDCoeff.kMinOutput = frc::SmartDashboard::GetNumber("Min Output", m_shooterPIDCoeff.kMinOutput);
+
+  InitializePIDControllers();
+}
 
 void Robot::TeleopPeriodic()
 {
@@ -127,14 +148,19 @@ void Robot::TeleopPeriodic()
       double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
       double rpm = CalculateRPM(distance);
 
-      m_shooterPID.SetReference(-rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
-      //std::cout << "want = " << fabs(rpm) << " got = " << fabs(m_rightshooterEncoder.GetVelocity()) << std::endl;
+      // Override for test/calibration?
+      if (m_overrideShooterSpeed > 1.0) {
+        rpm = m_overrideShooterSpeed;
+        frc::SmartDashboard::PutNumber("Output Speed", m_leftshooterEncoder.GetVelocity());
+      }
+      m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+      //std::cout << "want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
 
-      // Enable uptake and hopper if we're at 99.5% of desired shooter speed
-      if (fabs(m_rightshooterEncoder.GetVelocity()) > fabs(rpm * 0.96))
+      // Enable uptake and hopper if we're at 98% of desired shooter speed
+      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.98))
       {
         m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-        m_hopperMotor.Set(1.0);
+        m_hopperMotor.Set(-0.25);
       }
       else
       {
@@ -147,40 +173,35 @@ void Robot::TeleopPeriodic()
   {
     // Not shooting: Shooter off, Hopper off, Uptake down, and Turret centered
     m_table->PutNumber("pipeline", 1); // Set driving pipeline of Limelight
-    m_rightshooterMotor.Set(0.0);
+    m_leftshooterMotor.Set(0.0);
     m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
     m_turretPID.SetReference(0, rev::ControlType::kPosition);
 
     //pipeline code
 
-    bool gatherButton = m_stick.GetRawButton(4);
-
-    if (gatherButton)
+    if (m_stick.GetRawButtonPressed(4))
     {
-      m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
-      m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
-      m_intakeMotor.Set(-1.0);
-      m_hopperMotor.Set(0.5);
-      m_gatherTimer = 0;
-    }
-    else
-    {
-      m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
-      m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
-      m_intakeMotor.Set(0.0);
+      if (!m_isGathering)
+      {
+        m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+        m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+        m_intakeMotor.Set(-1.0);
+        m_hopperMotor.Set(-0.25);
+        m_isGathering = true;
+      }
+      else
+      {
+        m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+        m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
+        m_intakeMotor.Set(0.0);
+        m_isGathering = false;
+        m_gatherTimer = 0;
+      }
     }
 
-    bool releasegatherButton = m_stick.GetRawButtonReleased(4);
     ++m_gatherTimer;
-    if (releasegatherButton)
-    {
-      m_gatherTimer = 0;
-      m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
-      m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
-      m_intakeMotor.Set(0.0);
-    }
 
-    if (m_gatherTimer > 200)
+    if ((m_gatherTimer > 2) && !m_isGathering)
     {
       m_hopperMotor.Set(0.0);
     }
@@ -215,7 +236,7 @@ void Robot::TestPeriodic()
 
   if (hopperButton)
   {
-    m_hopperMotor.Set(1.0);
+    m_hopperMotor.Set(0.5);
   }
   else
   {
@@ -225,10 +246,12 @@ void Robot::TestPeriodic()
   //turrett//
 
   bool turretButton = m_stick.GetRawButton(3);
+  //double move = m_stick.GetRawAxis(1);
+  //m_turretMotor.Set(move);
 
   if (turretButton)
   {
-    m_turretMotor.Set(1.0);
+    m_turretMotor.Set(0.1);
   }
   else
   {
