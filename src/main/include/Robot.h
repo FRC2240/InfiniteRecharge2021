@@ -110,8 +110,10 @@ class Robot : public frc::TimedRobot {
   frc::Compressor m_compressor;
 
   //gathering//
-  int m_gatherTimer = 0;
-  bool m_isGathering = false;
+  int  m_gatherTimer  = 0;
+  int  m_reverseTimer = 0;
+  bool m_isGathering   = false;
+  bool m_hopperReverse = false;
 
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
