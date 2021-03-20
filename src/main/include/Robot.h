@@ -42,7 +42,7 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
 
-  double constantLimelightAngle = 17;      // degrees (old 22)
+  double constantLimelightAngle = 13;      // degrees (old 22)
   double heightLimelight        = 23.0;    // inches
   double heightOfTarget         = 89.75;   // inches
 
