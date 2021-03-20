@@ -35,6 +35,9 @@ void Robot::RobotInit()
   // Set shooter motors equal (and inverted)
   m_rightshooterMotor.Follow(m_leftshooterMotor, true);
 
+  m_hopperMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+
+
   // Initialize PID coeffiecients
   InitializePIDControllers();
 
@@ -139,6 +142,8 @@ void Robot::TeleopPeriodic()
   if (fabs(m_stick.GetRawAxis(3)) > 0.75)
   {
     m_table->PutNumber("pipeline", 0); // Enable targeting pipeline of Limelight
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
 
     // Is target locked?
     if (LimelightTracking())
@@ -147,6 +152,7 @@ void Robot::TeleopPeriodic()
       double ty = m_table->GetNumber("ty", 0.0);
       double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
       double rpm = CalculateRPM(distance);
+      std::cout << "distance = " << distance << " calc rpm = " << rpm << std::endl;
 
       // Override for test/calibration?
       if (m_overrideShooterSpeed > 1.0) {
@@ -154,13 +160,13 @@ void Robot::TeleopPeriodic()
         frc::SmartDashboard::PutNumber("Output Speed", m_leftshooterEncoder.GetVelocity());
       }
       m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
-      //std::cout << "want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
+      std::cout << "distance = " << distance  << " want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
 
       // Enable uptake and hopper if we're at 98% of desired shooter speed
       if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.98))
       {
         m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-        m_hopperMotor.Set(-0.25);
+        m_hopperMotor.Set(0.2);
       }
       else
       {
@@ -175,10 +181,8 @@ void Robot::TeleopPeriodic()
     m_table->PutNumber("pipeline", 1); // Set driving pipeline of Limelight
     m_leftshooterMotor.Set(0.0);
     m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
-    m_turretPID.SetReference(0, rev::ControlType::kPosition);
 
     //pipeline code
-
     if (m_stick.GetRawButtonPressed(4))
     {
       if (!m_isGathering)
@@ -186,8 +190,10 @@ void Robot::TeleopPeriodic()
         m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
         m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
         m_intakeMotor.Set(-1.0);
-        m_hopperMotor.Set(-0.25);
+        m_hopperMotor.Set(0.15);
+        m_turretPID.SetReference(30.0, rev::ControlType::kPosition);
         m_isGathering = true;
+        m_gatherTimer = 0;
       }
       else
       {
@@ -196,9 +202,37 @@ void Robot::TeleopPeriodic()
         m_intakeMotor.Set(0.0);
         m_isGathering = false;
         m_gatherTimer = 0;
+        m_hopperReverse = false;
       }
     }
 
+    if (!m_isGathering) {
+      m_turretPID.SetReference(0, rev::ControlType::kPosition);
+    }
+
+    frc::SmartDashboard::PutNumber("Hopper Current", m_hopperMotor.GetOutputCurrent());
+    frc::SmartDashboard::PutNumber("Hopper Speed", m_hopperEncoder.GetVelocity());
+
+    // If gathering and the velocity drops, it's a jam!
+    // Reverse the hopper for a short period
+    //if ((m_hopperMotor.GetOutputCurrent() > 20.0) && !m_hopperReverse) {
+    if (m_isGathering && !m_hopperReverse && (m_hopperEncoder.GetVelocity() < 500.0) && (m_gatherTimer > 20)) {
+      m_hopperMotor.Set(0.0);
+      m_hopperReverse = true;
+      m_reverseTimer = 0;
+      m_hopperMotor.Set(-0.15);
+      std::cout << "start\n";
+    }
+
+    // Hopper reverse complete?
+    if ((m_reverseTimer > 100) && m_hopperReverse) {
+      m_hopperMotor.Set(0.15);
+      m_hopperReverse = false;
+      m_gatherTimer = 0;
+      std::cout << "stop\n";
+    }
+
+    ++m_reverseTimer;
     ++m_gatherTimer;
 
     if ((m_gatherTimer > 2) && !m_isGathering)
@@ -236,7 +270,7 @@ void Robot::TestPeriodic()
 
   if (hopperButton)
   {
-    m_hopperMotor.Set(0.5);
+    m_hopperMotor.Set(0.15);
   }
   else
   {
@@ -281,7 +315,7 @@ void Robot::TestPeriodic()
     m_colorwheelMotor.Set(0);
   }
   // intake
-  bool intakeButton = m_stick.GetRawButton(2);
+  /*bool intakeButton = m_stick.GetRawButton(2);
   if (intakeButton)
   {
     m_intakeMotor.Set(1.0);
@@ -289,7 +323,7 @@ void Robot::TestPeriodic()
   else
   {
     m_intakeMotor.Set(0);
-  }
+  }*/
   // climber
   /*
   bool raisingButton = m_stick.GetRawButton(3);
