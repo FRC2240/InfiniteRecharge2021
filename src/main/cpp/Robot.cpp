@@ -65,6 +65,9 @@ void Robot::RobotInit()
   frc::SmartDashboard::PutNumber("Feed Forward", m_shooterPIDCoeff.kFF);
   frc::SmartDashboard::PutNumber("Max Output", m_shooterPIDCoeff.kMaxOutput);
   frc::SmartDashboard::PutNumber("Min Output", m_shooterPIDCoeff.kMinOutput);
+
+  frc::SmartDashboard::PutNumber("tx offset", m_txOFFSET);
+
 }
 
 /**
@@ -103,23 +106,49 @@ void Robot::AutonomousInit()
   {
     // Default Auto goes here
   }
+  m_autoTimer.Start();
 }
 
 void Robot::AutonomousPeriodic()
 {
-  if (m_autoSelected == kAutoNameCustom)
-  {
-    // Custom Auto goes here
+  if (m_autoTimer.Get() <= 0.25) {
+    m_robotDrive.ArcadeDrive(-0.5, 0);
   }
-  else
-  {
-    // Default Auto goes here
+
+  if (m_autoTimer.Get() >= 2 && m_autoTimer.Get() <= 10) {
+    m_table->PutNumber("pipeline", 0); // Enable targeting pipeline of Limelight
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+
+    // Is target locked?
+    if (LimelightTracking())
+    {
+      // Calculate distance to target from Limelight data
+      double ty = m_table->GetNumber("ty", 0.0);
+      double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
+      double rpm = CalculateRPM(distance);
+
+      m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+      std::cout << "distance = " << distance  << " want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
+
+      // Enable uptake and hopper if we're at 98% of desired shooter speed
+      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.97))
+      {
+        m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+        m_hopperMotor.Set(0.3);
+      }
+    }
+  } else {
+    m_hopperMotor.Set(0.0);
+    m_turretPID.SetReference(0, rev::ControlType::kPosition);
+    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+    m_shooterPID.SetReference(0.0, rev::ControlType::kVelocity);
   }
 }
 
 void Robot::TeleopInit() {
   m_overrideShooterSpeed       = frc::SmartDashboard::GetNumber("Shooter Speed", 0);
-
+  m_txOFFSET                   = frc::SmartDashboard::GetNumber("tx offset", m_txOFFSET);
   m_shooterPIDCoeff.kP         = frc::SmartDashboard::GetNumber("P Gain", m_shooterPIDCoeff.kP);
   m_shooterPIDCoeff.kI         = frc::SmartDashboard::GetNumber("I Gain", m_shooterPIDCoeff.kI);
   m_shooterPIDCoeff.kD         = frc::SmartDashboard::GetNumber("D Gain", m_shooterPIDCoeff.kD);
@@ -136,7 +165,7 @@ void Robot::TeleopPeriodic()
   // read drive input from joystick
   double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
-  m_robotDrive.ArcadeDrive(move, -rotate);
+  m_robotDrive.ArcadeDrive(move, -0.75*rotate);
 
   // Shooting?
   if (fabs(m_stick.GetRawAxis(3)) > 0.75)
@@ -152,26 +181,23 @@ void Robot::TeleopPeriodic()
       double ty = m_table->GetNumber("ty", 0.0);
       double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
       double rpm = CalculateRPM(distance);
-      std::cout << "distance = " << distance << " calc rpm = " << rpm << std::endl;
 
       // Override for test/calibration?
       if (m_overrideShooterSpeed > 1.0) {
         rpm = m_overrideShooterSpeed;
         frc::SmartDashboard::PutNumber("Output Speed", m_leftshooterEncoder.GetVelocity());
       }
-      m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+
+      if ((distance < 420) && (distance > 96)) {
+        m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+      }
       std::cout << "distance = " << distance  << " want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
 
       // Enable uptake and hopper if we're at 98% of desired shooter speed
-      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.98))
+      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.95))
       {
         m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-        m_hopperMotor.Set(0.2);
-      }
-      else
-      {
-        m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
-        m_hopperMotor.Set(0.0);
+        m_hopperMotor.Set(0.3);
       }
     }
   }
@@ -189,8 +215,8 @@ void Robot::TeleopPeriodic()
       {
         m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
         m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
-        m_intakeMotor.Set(-1.0);
-        m_hopperMotor.Set(0.15);
+        m_intakeMotor.Set(-0.75);
+        m_hopperMotor.Set(0.2);
         m_turretPID.SetReference(30.0, rev::ControlType::kPosition);
         m_isGathering = true;
         m_gatherTimer = 0;
@@ -208,6 +234,8 @@ void Robot::TeleopPeriodic()
 
     if (!m_isGathering) {
       m_turretPID.SetReference(0, rev::ControlType::kPosition);
+      m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
+      m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
     }
 
     frc::SmartDashboard::PutNumber("Hopper Current", m_hopperMotor.GetOutputCurrent());
@@ -215,21 +243,18 @@ void Robot::TeleopPeriodic()
 
     // If gathering and the velocity drops, it's a jam!
     // Reverse the hopper for a short period
-    //if ((m_hopperMotor.GetOutputCurrent() > 20.0) && !m_hopperReverse) {
     if (m_isGathering && !m_hopperReverse && (m_hopperEncoder.GetVelocity() < 500.0) && (m_gatherTimer > 20)) {
       m_hopperMotor.Set(0.0);
       m_hopperReverse = true;
       m_reverseTimer = 0;
-      m_hopperMotor.Set(-0.15);
-      std::cout << "start\n";
+      m_hopperMotor.Set(-0.4);
     }
 
     // Hopper reverse complete?
-    if ((m_reverseTimer > 100) && m_hopperReverse) {
-      m_hopperMotor.Set(0.15);
+    if ((m_reverseTimer > 25) && m_hopperReverse) {
+      m_hopperMotor.Set(0.2);
       m_hopperReverse = false;
       m_gatherTimer = 0;
-      std::cout << "stop\n";
     }
 
     ++m_reverseTimer;
@@ -270,7 +295,7 @@ void Robot::TestPeriodic()
 
   if (hopperButton)
   {
-    m_hopperMotor.Set(0.15);
+    m_hopperMotor.Set(0.2);
   }
   else
   {
@@ -417,7 +442,7 @@ bool Robot::LimelightTracking()
   if (tv > 0.0)
   {
     // Proportional steering
-    limelightTurnCmd = (tx + tx_OFFSET) * STEER_K;
+    limelightTurnCmd = (tx + m_txOFFSET) * STEER_K;
     limelightTurnCmd = std::clamp(limelightTurnCmd, -MAX_STEER, MAX_STEER);
     if (tx < 0.25)
     {
@@ -432,16 +457,8 @@ bool Robot::LimelightTracking()
 // Calculate the RPM from the distance
 double Robot::CalculateRPM(double d)
 {
-  double rpm;
+  double rpm = 0.0169 * d * d - 4.12 * d + 2614.5;
 
-  if (d < 125.0)
-  {
-    rpm = (-45.671 * d) + 14322.0;
-  }
-  else
-  {
-    rpm = 0.028052 * d * d - 8.5977 * d + 2946.0;
-  }
   return rpm;
 }
 
