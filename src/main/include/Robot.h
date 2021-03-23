@@ -137,6 +137,8 @@ class Robot : public frc::TimedRobot {
   bool m_isGathering   = false;
   bool m_hopperReverse = false;
 
+  
+
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
   double tx_OFFSET = 0.0; // old = 3.0
