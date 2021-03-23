@@ -9,6 +9,7 @@
 #include <frc/Compressor.h>
 #include <frc/DoubleSolenoid.h>
 #include <frc/smartdashboard/SendableChooser.h>
+#include <frc/Timer.h>
 #include <frc/Filesystem.h>
 #include <frc/trajectory/TrajectoryUtil.h>
 
@@ -21,6 +22,7 @@
 // theoretically for *your* robot's drive. The Robot Characterization
 // Toolsuite provides a convenient tool for obtaining these values for your
 // robot.
+/*
 constexpr auto ks = 0.22_V;
 constexpr auto kv = 1.98 * 1_V * 1_s / 1_m;
 constexpr auto ka = 0.2 * 1_V * 1_s * 1_s / 1_m;
@@ -38,7 +40,7 @@ constexpr auto kMaxAcceleration = 3.06_mps_sq;
 // seconds
 constexpr double kRamseteB = 2;
 constexpr double kRamseteZeta = 0.7;
-
+*/
 #include "rev/CANSparkMax.h"
 
 class Robot : public frc::TimedRobot {
@@ -161,4 +163,8 @@ class Robot : public frc::TimedRobot {
   // pidCoeff ----------------{kP, kI, kD, kIz, kFF, kMinOutput, kMaxOutput}
   pidCoeff m_shooterPIDCoeff {0.0007, 0.0, 1.0, 0.0, 0.000207, -1.0, 1.0};
   pidCoeff m_turretPIDCoeff {0.02, 0.0, 0.0, 0.0, 0.0, -0.5, 0.5};
+
+  frc::Timer m_autoTimer;
+
+  double m_txOFFSET = 2.0;
 };
