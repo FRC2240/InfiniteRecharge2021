@@ -165,9 +165,9 @@ void Robot::TeleopPeriodic()
   // read drive input from joystick
   double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
-  bool isQuickTurn;
-  //m_robotDrive.ArcadeDrive(move, -0.75*rotate);
-  m_robotDrive.CurvatureDrive(move, -rotate, isQuickTurn);
+  //bool isQuickTurn = true;
+  m_robotDrive.ArcadeDrive(move, -0.5*rotate);
+  //m_robotDrive.CurvatureDrive(move, -rotate, isQuickTurn);
 
   // Shooting?
   if (fabs(m_stick.GetRawAxis(3)) > 0.75)
@@ -196,7 +196,7 @@ void Robot::TeleopPeriodic()
       std::cout << "distance = " << distance  << " want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
 
       // Enable uptake and hopper if we're at 98% of desired shooter speed
-      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.95))
+      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.98))
       {
         m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
         m_hopperMotor.Set(0.3);
@@ -459,8 +459,8 @@ bool Robot::LimelightTracking()
 // Calculate the RPM from the distance
 double Robot::CalculateRPM(double d)
 {
-  double rpm = 0.0169 * d * d - 4.12 * d + 2614.5;
-
+  //double rpm = 0.0169 * d * d - 4.12 * d + 2614.5;
+  double rpm = 0.01474 * d * d - 3.573 * d + 2588.0;
   return rpm;
 }
 
