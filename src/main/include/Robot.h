@@ -9,6 +9,7 @@
 #include <frc/Compressor.h>
 #include <frc/DoubleSolenoid.h>
 #include <frc/smartdashboard/SendableChooser.h>
+#include <frc/DriverStation.h>
 #include <frc/Timer.h>
 #include <frc/Filesystem.h>
 #include <frc/trajectory/TrajectoryUtil.h>
@@ -157,7 +158,10 @@ class Robot : public frc::TimedRobot {
   double m_txOFFSET = 2.0;
 
   // **** RAMSETE Control **** //
-  Drivetrain m_drive;
+  frc::SpeedControllerGroup m_leftGroup{m_frontleftMotor, m_backleftMotor};
+  frc::SpeedControllerGroup m_rightGroup{m_frontrightMotor, m_backrightMotor};
+
+  Drivetrain m_drive{&m_leftGroup, &m_rightGroup, &m_frontleftEncoder, &m_frontrightEncoder};
 
   // The trajectory to follow
   frc::Trajectory m_trajectory;
