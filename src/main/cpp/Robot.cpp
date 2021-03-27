@@ -10,13 +10,14 @@
 
 void Robot::RobotInit()
 {
-  /* Add this section back whrn ready for Pathweaver
-  wpi::SmallString<64> deployDirectory;
-  frc::filesystem::GetDeployDirectory(deployDirectory);
-  wpi::sys::path::append(deployDirectory, "paths");
-  wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
+  m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
+  m_chooser.AddOption(kAutoNameSimpleGame, kAutoNameSimpleGame);
+  m_chooser.AddOption(kAutoNamePathweaverGame, kAutoNamePathweaverGame);
+  m_chooser.AddOption(kAutoNameAutoNav, kAutoNameAutoNav);
+  m_chooser.AddOption(kAutoNameGalacticSearch, kAutoNameGalacticSearch);
+  m_chooser.AddOption(kAutoNameSimplePath, kAutoNameSimplePath);
 
-  frc::Trajectory trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);*/
+  frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
 
   m_backleftMotor.RestoreFactoryDefaults();
   m_backrightMotor.RestoreFactoryDefaults();
@@ -67,7 +68,6 @@ void Robot::RobotInit()
   frc::SmartDashboard::PutNumber("Min Output", m_shooterPIDCoeff.kMinOutput);
 
   frc::SmartDashboard::PutNumber("tx offset", m_txOFFSET);
-
 }
 
 /**
@@ -94,56 +94,73 @@ void Robot::RobotPeriodic() {}
 void Robot::AutonomousInit()
 {
   m_autoSelected = m_chooser.GetSelected();
-  // m_autoSelected = SmartDashboard::GetString("Auto Selector",
-  //     kAutoNameDefault);
-  std::cout << "Auto selected: " << m_autoSelected << std::endl;
+  std::cout << "Auto Mode: " << m_autoSelected << std::endl;
 
-  if (m_autoSelected == kAutoNameCustom)
+  if (m_autoSelected == kAutoNameSimpleGame)
   {
-    // Custom Auto goes here
+    m_autoTimer.Start();
+    return;
   }
-  else
+
+  if (m_autoSelected == kAutoNameDefault)
   {
-    // Default Auto goes here
+    std::cout << "Default Auto: Do nothing\n";
+    return;
   }
-  m_autoTimer.Start();
+
+  // Pathweaver path directory
+  wpi::SmallString<64> deployDirectory;
+  frc::filesystem::GetDeployDirectory(deployDirectory);
+  wpi::sys::path::append(deployDirectory, "paths");
+
+  // Pathweaver Modes...
+  if (m_autoSelected == kAutoNamePathweaverGame)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoNameSimplePath)
+  {
+    // Create path
+    m_trajectory = frc::TrajectoryGenerator::GenerateTrajectory(
+      frc::Pose2d(0_m, 0_m, 0_rad),
+      {frc::Translation2d(1_m, 1_m), frc::Translation2d(2_m, -1_m)},
+      frc::Pose2d(3_m, 0_m, 0_rad), frc::TrajectoryConfig(3_fps, 3_fps_sq));
+  }
+  else if (m_autoSelected == kAutoNameAutoNav)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoNameGalacticSearch)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+
+  // Start the timer
+  m_timer.Start();
+
+  // Reset the drivetrain's odometry to the starting pose of the trajectory
+  m_drive.ResetOdometry(m_trajectory.InitialPose());
 }
 
 void Robot::AutonomousPeriodic()
 {
-  if (m_autoTimer.Get() <= 0.25) {
-    m_robotDrive.ArcadeDrive(-0.5, 0);
+  if (m_autoSelected == kAutoNameSimpleGame)
+  {
+    AutoSimpleGame();
+    return;
   }
 
-  if (m_autoTimer.Get() >= 2 && m_autoTimer.Get() <= 10) {
-    m_table->PutNumber("pipeline", 0); // Enable targeting pipeline of Limelight
-    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
-    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
-
-    // Is target locked?
-    if (LimelightTracking())
-    {
-      // Calculate distance to target from Limelight data
-      double ty = m_table->GetNumber("ty", 0.0);
-      double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
-      double rpm = CalculateRPM(distance);
-
-      m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
-      std::cout << "distance = " << distance  << " want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
-
-      // Enable uptake and hopper if we're at 98% of desired shooter speed
-      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.97))
-      {
-        m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-        m_hopperMotor.Set(0.3);
-      }
-    }
-  } else {
-    m_hopperMotor.Set(0.0);
-    m_turretPID.SetReference(0, rev::ControlType::kPosition);
-    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
-    m_shooterPID.SetReference(0.0, rev::ControlType::kVelocity);
+  if (m_autoSelected == kAutoNameDefault) {
+    return;
   }
+
+  AutoFollowPath();
 }
 
 void Robot::TeleopInit() {
@@ -480,6 +497,63 @@ void Robot::InitializePIDControllers()
   m_turretPID.SetIZone(m_turretPIDCoeff.kIz);
   m_turretPID.SetFF(m_turretPIDCoeff.kFF);
   m_turretPID.SetOutputRange(m_turretPIDCoeff.kMinOutput, m_turretPIDCoeff.kMaxOutput);
+}
+
+void Robot::AutoSimpleGame()
+{
+  if (m_autoTimer.Get() <= 0.25) {
+    m_robotDrive.ArcadeDrive(-0.5, 0);
+  }
+
+  if (m_autoTimer.Get() >= 2 && m_autoTimer.Get() <= 10) {
+    m_table->PutNumber("pipeline", 0); // Enable targeting pipeline of Limelight
+    m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
+    m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
+
+    // Is target locked?
+    if (LimelightTracking())
+    {
+      // Calculate distance to target from Limelight data
+      double ty = m_table->GetNumber("ty", 0.0);
+      double distance = ((heightOfTarget - heightLimelight) / tan((constantLimelightAngle + ty) * (3.141592653 / 180)));
+      double rpm = CalculateRPM(distance);
+
+      m_shooterPID.SetReference(rpm, rev::ControlType::kVelocity); // Set shooter motor speed (based on distance)
+      std::cout << "distance = " << distance  << " want = " << rpm << " got = " << m_leftshooterEncoder.GetVelocity() << std::endl;
+
+      // Enable uptake and hopper if we're at 98% of desired shooter speed
+      if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.97))
+      {
+        m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+        m_hopperMotor.Set(0.3);
+      }
+    }
+  } else {
+    m_hopperMotor.Set(0.0);
+    m_turretPID.SetReference(0, rev::ControlType::kPosition);
+    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+    m_shooterPID.SetReference(0.0, rev::ControlType::kVelocity);
+  }
+}
+
+void Robot::AutoFollowPath()
+{
+  // Update odometry
+    m_drive.UpdateOdometry();
+
+    if (m_timer.Get() < m_trajectory.TotalTime()) {
+      // Get the desired pose from the trajectory
+      auto desiredPose = m_trajectory.Sample(m_timer.Get());
+
+      // Get the reference chassis speeds from the Ramsete Controller
+      auto refChassisSpeeds =
+          m_ramseteController.Calculate(m_drive.GetPose(), desiredPose);
+
+      // Set the linear and angular speeds
+      m_drive.Drive(refChassisSpeeds.vx, refChassisSpeeds.omega);
+    } else {
+      m_drive.Drive(0_mps, 0_rad_per_s);
+    }
 }
 
 #ifndef RUNNING_FRC_TESTS
