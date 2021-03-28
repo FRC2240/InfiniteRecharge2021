@@ -59,7 +59,11 @@ class Drivetrain {
 			frc::DriverStation::ReportError(err_string.c_str());
 		}
 
-    m_gyro->Reset();
+    //m_gyro->Reset();
+    
+    m_odometry = new frc::DifferentialDriveOdometry(m_gyro->GetRotation2d());
+    std::cout << "DriveTrain pose " << m_odometry->GetPose().Rotation().Degrees() << std::endl;
+    std::cout << "DriveTrain done " << m_gyro->GetRotation2d().Degrees() << std::endl;
   }
 
   void SetSpeeds(const frc::DifferentialDriveWheelSpeeds& speeds);
@@ -68,19 +72,20 @@ class Drivetrain {
   void UpdateOdometry();
   void ResetOdometry(const frc::Pose2d& pose);
   frc::Pose2d GetPose() const;
+  units::angle::degree_t GetRotation();
 
  private:
 
-  static constexpr double kP = 2.42;                                // measured
-  static constexpr auto kS = 0.314_V;                               // measured
-  static constexpr auto kV = 1.57 * 1_V * 1_s / 1_m;                // measured
-  static constexpr auto kA = 0.156 * 1_V * 1_s * 1_s / 1_m;         // measured
-  static constexpr units::meter_t kTrackWidth = 0.381_m * 2;        // measured
+  static constexpr double kP = 0.157; //2.77?;                                // measured
+  static constexpr auto   kS = 0.27_V;                              // measured
+  static constexpr auto   kV = 1.53 * 1_V * 1_s / 1_m;              // measured
+  static constexpr auto   kA = 0.254 * 1_V * 1_s * 1_s / 1_m;       // measured
+  static constexpr units::meter_t kTrackWidth = 0.657_m;            // measured
 
-  static constexpr double kWheelDiameter = 0.1524;                  // meters (6 inches)
-
+  static constexpr double kWheelDiameter = 0.15;                    // meters (6 inches)
   static constexpr auto kMaxAcceleration = 1.0_mps_sq;              // estimate
   static constexpr units::meters_per_second_t kMaxSpeed = 3.5_mps;  // estimate
+
   static constexpr double kDistancePerRotation = wpi::math::pi * kWheelDiameter;
 
   frc::SpeedControllerGroup* m_leftGroup;
@@ -95,7 +100,7 @@ class Drivetrain {
   AHRS* m_gyro;
 
   frc::DifferentialDriveKinematics m_kinematics{kTrackWidth};
-  frc::DifferentialDriveOdometry m_odometry{m_gyro->GetRotation2d()};
+  frc::DifferentialDriveOdometry* m_odometry;
 
   // Gains are for example purposes only - must be determined for your own
   // robot!

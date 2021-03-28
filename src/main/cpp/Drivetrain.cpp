@@ -22,15 +22,20 @@ void Drivetrain::Drive(units::meters_per_second_t xSpeed,
 }
 
 void Drivetrain::UpdateOdometry() {
-  m_odometry.Update(m_gyro->GetRotation2d(),
+  m_odometry->Update(m_gyro->GetRotation2d(),
                     units::meter_t(m_leftEncoder->GetPosition()),
                     units::meter_t(m_rightEncoder->GetPosition()));
 }
 
 void Drivetrain::ResetOdometry(const frc::Pose2d& pose) {
-  m_odometry.ResetPosition(pose, m_gyro->GetRotation2d());
+  m_odometry->ResetPosition(pose, m_gyro->GetRotation2d());
 }
 
 frc::Pose2d Drivetrain::GetPose() const {
-  return m_odometry.GetPose();
+  return m_odometry->GetPose();
+}
+
+units::angle::degree_t Drivetrain::GetRotation() {
+  //return m_gyro->GetAngle();
+  return m_gyro->GetRotation2d().Degrees();
 }

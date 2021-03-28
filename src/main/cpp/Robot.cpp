@@ -10,6 +10,8 @@
 
 void Robot::RobotInit()
 {
+  std::cout << "Robot Init" << std::endl;
+
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameSimpleGame, kAutoNameSimpleGame);
   m_chooser.AddOption(kAutoNamePathweaverGame, kAutoNamePathweaverGame);
@@ -68,6 +70,11 @@ void Robot::RobotInit()
   frc::SmartDashboard::PutNumber("Min Output", m_shooterPIDCoeff.kMinOutput);
 
   frc::SmartDashboard::PutNumber("tx offset", m_txOFFSET);
+
+  // Initialize auto driver
+  auto leftGroup  = new frc::SpeedControllerGroup(m_frontleftMotor, m_backleftMotor);
+  auto rightGroup = new frc::SpeedControllerGroup(m_frontrightMotor, m_backrightMotor);
+  m_drive = new Drivetrain(leftGroup, rightGroup, &m_frontleftEncoder, &m_frontrightEncoder);
 }
 
 /**
@@ -145,7 +152,7 @@ void Robot::AutonomousInit()
   m_timer.Start();
 
   // Reset the drivetrain's odometry to the starting pose of the trajectory
-  m_drive.ResetOdometry(m_trajectory.InitialPose());
+  m_drive->ResetOdometry(m_trajectory.InitialPose());
 }
 
 void Robot::AutonomousPeriodic()
@@ -179,6 +186,7 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic()
 {
+  std::cout << "rotation: " << m_drive->GetRotation() << std::endl;
   // read drive input from joystick
   double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
@@ -539,20 +547,19 @@ void Robot::AutoSimpleGame()
 void Robot::AutoFollowPath()
 {
   // Update odometry
-    m_drive.UpdateOdometry();
+    m_drive->UpdateOdometry();
 
     if (m_timer.Get() < m_trajectory.TotalTime()) {
       // Get the desired pose from the trajectory
       auto desiredPose = m_trajectory.Sample(m_timer.Get());
 
       // Get the reference chassis speeds from the Ramsete Controller
-      auto refChassisSpeeds =
-          m_ramseteController.Calculate(m_drive.GetPose(), desiredPose);
+      auto refChassisSpeeds = m_ramseteController.Calculate(m_drive->GetPose(), desiredPose);
 
       // Set the linear and angular speeds
-      m_drive.Drive(refChassisSpeeds.vx, refChassisSpeeds.omega);
+      m_drive->Drive(refChassisSpeeds.vx, refChassisSpeeds.omega);
     } else {
-      m_drive.Drive(0_mps, 0_rad_per_s);
+      m_drive->Drive(0_mps, 0_rad_per_s);
     }
 }
 
