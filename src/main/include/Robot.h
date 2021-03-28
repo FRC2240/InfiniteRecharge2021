@@ -9,39 +9,21 @@
 #include <frc/Compressor.h>
 #include <frc/DoubleSolenoid.h>
 #include <frc/smartdashboard/SendableChooser.h>
+#include <frc/DriverStation.h>
 #include <frc/Timer.h>
 #include <frc/Filesystem.h>
 #include <frc/trajectory/TrajectoryUtil.h>
+#include <frc/controller/RamseteController.h>
+#include <frc/trajectory/TrajectoryGenerator.h>
 
 #include <wpi/Path.h>
 #include <wpi/SmallString.h>
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
-// These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
-// These characterization values MUST be determined either experimentally or
-// theoretically for *your* robot's drive. The Robot Characterization
-// Toolsuite provides a convenient tool for obtaining these values for your
-// robot.
-/*
-constexpr auto ks = 0.22_V;
-constexpr auto kv = 1.98 * 1_V * 1_s / 1_m;
-constexpr auto ka = 0.2 * 1_V * 1_s * 1_s / 1_m;
 
-// Example value only - as above, this must be tuned for your drive!
-constexpr double kPDriveVel = 8.5;
-
-constexpr auto kTrackwidth = 0.69_m;
-//Error here: extern const frc::DifferentialDriveKinematics kDriveKinematics;
-
-constexpr auto kMaxSpeed = 11.5_mps;
-constexpr auto kMaxAcceleration = 3.06_mps_sq;
-
-// Reasonable baseline values for a RAMSETE follower in units of meters and
-// seconds
-constexpr double kRamseteB = 2;
-constexpr double kRamseteZeta = 0.7;
-*/
 #include "rev/CANSparkMax.h"
+
+#include "Drivetrain.h"
 
 class Robot : public frc::TimedRobot {
  public:
@@ -59,11 +41,18 @@ class Robot : public frc::TimedRobot {
   bool LimelightTracking();
   void InitializePIDControllers();
   double CalculateRPM(double d);
+  void AutoSimpleGame();
+  void AutoFollowPath();
 
  private:
   frc::SendableChooser<std::string> m_chooser;
-  const std::string kAutoNameDefault = "Default";
-  const std::string kAutoNameCustom = "My Auto";
+  const std::string kAutoNameSimpleGame     = "SimpleGame";     // Simple Game Auto: Back up and shoot
+  const std::string kAutoNamePathweaverGame = "PathweaverGame"; // Pathweaver for INFINITE RECHARGE Game
+  const std::string kAutoNameSimplePath     = "SimplePath";     // Simple test path
+  const std::string kAutoNameAutoNav        = "AutoNav";        // AutoNav Challenge
+  const std::string kAutoNameGalacticSearch = "GalacticSearch"; // Galactic Search
+  const std::string kAutoNameDefault        = "Default";        // Default: Do nothing
+
   std::string m_autoSelected;
 
   double constantLimelightAngle = 13;      // degrees (old 22)
@@ -167,4 +156,19 @@ class Robot : public frc::TimedRobot {
   frc::Timer m_autoTimer;
 
   double m_txOFFSET = 2.0;
+
+  // **** RAMSETE Control **** //
+  //frc::SpeedControllerGroup* m_leftGroup; //{m_frontleftMotor, m_backleftMotor};
+  //frc::SpeedControllerGroup* m_rightGroup; //{m_frontrightMotor, m_backrightMotor};
+
+  Drivetrain* m_drive; //{&m_leftGroup, &m_rightGroup, &m_frontleftEncoder, &m_frontrightEncoder};
+
+  // The trajectory to follow
+  frc::Trajectory m_trajectory;
+
+  // The Ramsete Controller to follow the trajectory
+  frc::RamseteController m_ramseteController;
+
+  // The timer to use during the autonomous period
+  frc2::Timer m_timer;
 };
