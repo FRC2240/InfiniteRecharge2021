@@ -40,7 +40,6 @@ void Robot::RobotInit()
 
   m_hopperMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 
-
   // Initialize PID coeffiecients
   InitializePIDControllers();
 
@@ -70,6 +69,8 @@ void Robot::RobotInit()
   frc::SmartDashboard::PutNumber("Min Output", m_shooterPIDCoeff.kMinOutput);
 
   frc::SmartDashboard::PutNumber("tx offset", m_txOFFSET);
+
+  m_robotDrive.SetSafetyEnabled(false);
 
   // Initialize auto driver
   auto leftGroup  = new frc::SpeedControllerGroup(m_frontleftMotor, m_backleftMotor);
@@ -133,7 +134,10 @@ void Robot::AutonomousInit()
     m_trajectory = frc::TrajectoryGenerator::GenerateTrajectory(
       frc::Pose2d(0_m, 0_m, 0_rad),
       {frc::Translation2d(1_m, 1_m), frc::Translation2d(2_m, -1_m)},
-      frc::Pose2d(3_m, 0_m, 0_rad), frc::TrajectoryConfig(3_fps, 3_fps_sq));
+      frc::Pose2d(3_m, 0_m, 0_rad), frc::TrajectoryConfig(2.0_mps, 0.5_mps_sq));
+      //frc::Pose2d(0_m, 0_m, 0_rad),
+      //{frc::Translation2d(1_m, 0_m)},
+      //frc::Pose2d(2_m, 0_m, 0_rad), frc::TrajectoryConfig(8_fps, 4_fps_sq));
   }
   else if (m_autoSelected == kAutoNameAutoNav)
   {
@@ -186,13 +190,13 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic()
 {
-  std::cout << "rotation: " << m_drive->GetRotation() << std::endl;
   // read drive input from joystick
   double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
+
   //bool isQuickTurn = true;
-  m_robotDrive.ArcadeDrive(move, -0.5*rotate);
   //m_robotDrive.CurvatureDrive(move, -rotate, isQuickTurn);
+  m_robotDrive.ArcadeDrive(move, -0.5*rotate);
 
   // Shooting?
   if (fabs(m_stick.GetRawAxis(3)) > 0.75)
@@ -298,11 +302,23 @@ void Robot::DisabledInit() {}
 
 void Robot::DisabledPeriodic() {}
 
-void Robot::TestInit() {}
+void Robot::TestInit() {
+    m_frontrightEncoder.SetPosition(0.0);
+    m_backrightEncoder.SetPosition(0.0);
+    m_frontleftEncoder.SetPosition(0.0);
+    m_backleftEncoder.SetPosition(0.0);
+}
 
 void Robot::TestPeriodic()
 {
-  std::cout << "turret: " << m_turretEncoder.GetPosition() << std::endl;
+  std::cout << "encoders: " 
+  << m_frontrightEncoder.GetPosition() << " "
+  << m_backrightEncoder.GetPosition()  << " "
+  << m_frontleftEncoder.GetPosition()  << " "
+  << m_backleftEncoder.GetPosition()   << " "
+  << std::endl;
+
+  //std::cout << "turret: " << m_turretEncoder.GetPosition() << std::endl;
   //shooter//
 
   bool shooterButton = m_stick.GetRawButton(1);
@@ -554,6 +570,11 @@ void Robot::AutoFollowPath()
       auto desiredPose = m_trajectory.Sample(m_timer.Get());
 
       // Get the reference chassis speeds from the Ramsete Controller
+      //std::cout << "x = " << m_drive->GetPose().X() 
+      //          <<  "y = " << m_drive->GetPose().Y() << " rot = " << m_drive->GetPose().Rotation().Degrees() << std::endl;
+      //std::cout << "dx = " << desiredPose.pose.X() 
+      //          << " dy = " << desiredPose.pose.Y() << " drot = " << desiredPose.pose.Rotation().Degrees() << std::endl;
+      
       auto refChassisSpeeds = m_ramseteController.Calculate(m_drive->GetPose(), desiredPose);
 
       // Set the linear and angular speeds
