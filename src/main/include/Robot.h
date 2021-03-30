@@ -82,6 +82,7 @@ class Robot : public frc::TimedRobot {
   rev::CANEncoder m_frontrightEncoder = m_frontrightMotor.GetEncoder();
   rev::CANEncoder m_backleftEncoder = m_backleftMotor.GetEncoder();
   rev::CANEncoder m_frontleftEncoder = m_frontleftMotor.GetEncoder();
+  
   frc::DifferentialDrive m_robotDrive{m_frontleftMotor, m_frontrightMotor};
  
   //hopper and shooter and turret//
@@ -128,8 +129,6 @@ class Robot : public frc::TimedRobot {
   bool m_isGathering   = false;
   bool m_hopperReverse = false;
 
-  
-
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
   double tx_OFFSET = 0.0; // old = 3.0
@@ -158,10 +157,7 @@ class Robot : public frc::TimedRobot {
   double m_txOFFSET = 2.0;
 
   // **** RAMSETE Control **** //
-  //frc::SpeedControllerGroup* m_leftGroup; //{m_frontleftMotor, m_backleftMotor};
-  //frc::SpeedControllerGroup* m_rightGroup; //{m_frontrightMotor, m_backrightMotor};
-
-  Drivetrain* m_drive; //{&m_leftGroup, &m_rightGroup, &m_frontleftEncoder, &m_frontrightEncoder};
+  Drivetrain* m_drive;
 
   // The trajectory to follow
   frc::Trajectory m_trajectory;

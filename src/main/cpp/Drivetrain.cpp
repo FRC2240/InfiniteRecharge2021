@@ -7,10 +7,18 @@
 void Drivetrain::SetSpeeds(const frc::DifferentialDriveWheelSpeeds& speeds) {
   const auto leftFeedforward = m_feedforward.Calculate(speeds.left);
   const auto rightFeedforward = m_feedforward.Calculate(speeds.right);
+  //std::cout << "speeds: " << speeds.right << " " << speeds.left << std::endl;
+  //std::cout << "feeds: " << rightFeedforward << " " << leftFeedforward << std::endl;
+  //std::cout << "vel: " << m_rightEncoder->GetVelocity() << " " << -m_leftEncoder->GetVelocity() << std::endl;
+
   const double leftOutput = m_leftPIDController.Calculate(
-      m_leftEncoder->GetVelocity(), speeds.left.to<double>());
+      -m_leftEncoder->GetVelocity(), speeds.left.to<double>());
   const double rightOutput = m_rightPIDController.Calculate(
       m_rightEncoder->GetVelocity(), speeds.right.to<double>());
+
+  //std::cout << "outputs: " << rightOutput << " " << leftOutput << std::endl;
+  //std::cout << "voltages: " << units::volt_t{rightOutput} + rightFeedforward <<
+  // " " << units::volt_t{leftOutput} + leftFeedforward << std::endl;
 
   m_leftGroup->SetVoltage(units::volt_t{leftOutput} + leftFeedforward);
   m_rightGroup->SetVoltage(units::volt_t{rightOutput} + rightFeedforward);
@@ -18,13 +26,15 @@ void Drivetrain::SetSpeeds(const frc::DifferentialDriveWheelSpeeds& speeds) {
 
 void Drivetrain::Drive(units::meters_per_second_t xSpeed,
                        units::radians_per_second_t rot) {
+  //std::cout << "drive speed: " << xSpeed << " drive rot:" << rot << std::endl;
   SetSpeeds(m_kinematics.ToWheelSpeeds({xSpeed, 0_mps, rot}));
 }
 
 void Drivetrain::UpdateOdometry() {
+  //std::cout << "update pos: " << m_gyro->GetRotation2d().Degrees() << " "  << m_rightEncoder->GetPosition() << " " << -m_leftEncoder->GetPosition() << std::endl;
   m_odometry->Update(m_gyro->GetRotation2d(),
-                    units::meter_t(m_leftEncoder->GetPosition()),
-                    units::meter_t(m_rightEncoder->GetPosition()));
+                     units::meter_t(-m_leftEncoder->GetPosition()),
+                     units::meter_t(m_rightEncoder->GetPosition()));
 }
 
 void Drivetrain::ResetOdometry(const frc::Pose2d& pose) {
@@ -36,6 +46,5 @@ frc::Pose2d Drivetrain::GetPose() const {
 }
 
 units::angle::degree_t Drivetrain::GetRotation() {
-  //return m_gyro->GetAngle();
   return m_gyro->GetRotation2d().Degrees();
 }

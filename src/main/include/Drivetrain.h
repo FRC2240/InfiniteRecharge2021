@@ -42,13 +42,15 @@ class Drivetrain {
     // Set the distance per pulse for the drive encoders. We can simply use the
     // distance traveled for one rotation of the wheel divided by the encoder
     // resolution.
-    m_leftEncoder->SetPositionConversionFactor(kDistancePerRotation);
-    m_rightEncoder->SetPositionConversionFactor(kDistancePerRotation);
-    m_leftEncoder->SetVelocityConversionFactor(kDistancePerRotation/60.0);
-    m_rightEncoder->SetVelocityConversionFactor(kDistancePerRotation/60.0);
+    m_leftEncoder->SetPositionConversionFactor(kDistancePerEncoderRotation);
+    m_rightEncoder->SetPositionConversionFactor(kDistancePerEncoderRotation);
+    m_leftEncoder->SetVelocityConversionFactor(kDistancePerEncoderRotation/60.0);
+    m_rightEncoder->SetVelocityConversionFactor(kDistancePerEncoderRotation/60.0);
 
     m_leftEncoder->SetPosition(0.0);
     m_rightEncoder->SetPosition(0.0);
+
+    m_leftGroup->SetInverted(true);
 
     // Instantiate gyro
     try {
@@ -58,12 +60,9 @@ class Drivetrain {
 			err_string += ex.what();
 			frc::DriverStation::ReportError(err_string.c_str());
 		}
-
-    //m_gyro->Reset();
     
     m_odometry = new frc::DifferentialDriveOdometry(m_gyro->GetRotation2d());
     std::cout << "DriveTrain pose " << m_odometry->GetPose().Rotation().Degrees() << std::endl;
-    std::cout << "DriveTrain done " << m_gyro->GetRotation2d().Degrees() << std::endl;
   }
 
   void SetSpeeds(const frc::DifferentialDriveWheelSpeeds& speeds);
@@ -76,17 +75,13 @@ class Drivetrain {
 
  private:
 
-  static constexpr double kP = 0.157; //2.77?;                                // measured
+  static constexpr double kP = 0.157; //2.77;                       // measured
   static constexpr auto   kS = 0.27_V;                              // measured
   static constexpr auto   kV = 1.53 * 1_V * 1_s / 1_m;              // measured
   static constexpr auto   kA = 0.254 * 1_V * 1_s * 1_s / 1_m;       // measured
-  static constexpr units::meter_t kTrackWidth = 0.657_m;            // measured
+  static constexpr units::meter_t kTrackWidth = 0.657_m;            // measured    
 
-  static constexpr double kWheelDiameter = 0.15;                    // meters (6 inches)
-  static constexpr auto kMaxAcceleration = 1.0_mps_sq;              // estimate
-  static constexpr units::meters_per_second_t kMaxSpeed = 3.5_mps;  // estimate
-
-  static constexpr double kDistancePerRotation = wpi::math::pi * kWheelDiameter;
+  static constexpr double kDistancePerEncoderRotation = 0.0387; // / 1.125;     // measured (meters)  
 
   frc::SpeedControllerGroup* m_leftGroup;
   frc::SpeedControllerGroup* m_rightGroup;
