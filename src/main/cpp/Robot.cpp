@@ -15,9 +15,18 @@ void Robot::RobotInit()
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameSimpleGame, kAutoNameSimpleGame);
   m_chooser.AddOption(kAutoNamePathweaverGame, kAutoNamePathweaverGame);
-  m_chooser.AddOption(kAutoNameAutoNav, kAutoNameAutoNav);
-  m_chooser.AddOption(kAutoNameGalacticSearch, kAutoNameGalacticSearch);
+
+  m_chooser.AddOption(kAutoBarrelRacing, kAutoBarrelRacing);
+  m_chooser.AddOption(kAutoSlalom, kAutoSlalom);
+  m_chooser.AddOption(kAutoBounce, kAutoBounce);
+
+  m_chooser.AddOption(kAutoRedA, kAutoRedA);
+  m_chooser.AddOption(kAutoRedB, kAutoRedB);
+  m_chooser.AddOption(kAutoBlueA, kAutoBlueA);
+  m_chooser.AddOption(kAutoBlueB, kAutoBlueB);
+
   m_chooser.AddOption(kAutoNameSimplePath, kAutoNameSimplePath);
+  m_chooser.AddOption(kAutoErikTest, kAutoErikTest);
 
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
 
@@ -119,7 +128,7 @@ void Robot::AutonomousInit()
   // Pathweaver path directory
   wpi::SmallString<64> deployDirectory;
   frc::filesystem::GetDeployDirectory(deployDirectory);
-  wpi::sys::path::append(deployDirectory, "paths");
+  wpi::sys::path::append(deployDirectory, "output");
 
   // Pathweaver Modes...
   if (m_autoSelected == kAutoNamePathweaverGame)
@@ -134,21 +143,57 @@ void Robot::AutonomousInit()
     m_trajectory = frc::TrajectoryGenerator::GenerateTrajectory(
       frc::Pose2d(0_m, 0_m, 0_rad),
       {frc::Translation2d(1_m, 1_m), frc::Translation2d(2_m, -1_m)},
-      frc::Pose2d(3_m, 0_m, 0_rad), frc::TrajectoryConfig(2.0_mps, 0.5_mps_sq));
+      frc::Pose2d(3_m, 0_m, 0_rad), frc::TrajectoryConfig(6.0_fps, 4.0_fps_sq));
       //frc::Pose2d(0_m, 0_m, 0_rad),
       //{frc::Translation2d(1_m, 0_m)},
       //frc::Pose2d(2_m, 0_m, 0_rad), frc::TrajectoryConfig(8_fps, 4_fps_sq));
   }
-  else if (m_autoSelected == kAutoNameAutoNav)
+  else if (m_autoSelected == kAutoErikTest)
   {
     // Read path
-    wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
+    wpi::sys::path::append(deployDirectory, "ErikTest.wpilib.json");
     m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
   }
-  else if (m_autoSelected == kAutoNameGalacticSearch)
+  else if (m_autoSelected == kAutoBarrelRacing)
   {
     // Read path
-    wpi::sys::path::append(deployDirectory, "TestPath.wpilib.json");
+    wpi::sys::path::append(deployDirectory, "BarrelRacing.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoSlalom)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "Slalom.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoBounce)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "Bounce.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoRedA)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "RedA.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoRedB)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "RedB.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoBlueA)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "BlueA.wpilib.json");
+    m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+  }
+  else if (m_autoSelected == kAutoBlueB)
+  {
+    // Read path
+    wpi::sys::path::append(deployDirectory, "BlueB.wpilib.json");
     m_trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
   }
 

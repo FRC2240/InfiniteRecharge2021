@@ -49,8 +49,16 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameSimpleGame     = "SimpleGame";     // Simple Game Auto: Back up and shoot
   const std::string kAutoNamePathweaverGame = "PathweaverGame"; // Pathweaver for INFINITE RECHARGE Game
   const std::string kAutoNameSimplePath     = "SimplePath";     // Simple test path
-  const std::string kAutoNameAutoNav        = "AutoNav";        // AutoNav Challenge
-  const std::string kAutoNameGalacticSearch = "GalacticSearch"; // Galactic Search
+  const std::string kAutoErikTest           = "ErikTest";       // Test path
+
+  const std::string kAutoBarrelRacing       = "BarrelRacing";   // AutoNav Challenge
+  const std::string kAutoSlalom             = "Slalom";         // AutoNav Challenge
+  const std::string kAutoBounce             = "Bounce";         // AutoNav Challenge
+  const std::string kAutoRedA               = "RedA";           // Galactic Search
+  const std::string kAutoRedB               = "RedB";           // Galactic Search
+  const std::string kAutoBlueA              = "BlueA";          // Galactic Search
+  const std::string kAutoBlueB              = "BlueB";          // Galactic Search
+
   const std::string kAutoNameDefault        = "Default";        // Default: Do nothing
 
   std::string m_autoSelected;
