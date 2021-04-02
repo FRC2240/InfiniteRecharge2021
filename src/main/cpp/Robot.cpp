@@ -59,6 +59,8 @@ void Robot::RobotInit()
   m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, -67.0);
   m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 67.0);
 
+  m_hopperAltEncoder.SetPosition(0.0);
+
   // Start compressor
   m_compressor.Start();
 
@@ -235,6 +237,8 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic()
 {
+  std::cout << "hopper" << m_hopperAltEncoder.GetPosition() << std::endl;
+
   // read drive input from joystick
   double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
@@ -272,7 +276,12 @@ void Robot::TeleopPeriodic()
       // Enable uptake and hopper if we're at 98% of desired shooter speed
       if (m_leftshooterEncoder.GetVelocity() > (rpm * 0.98))
       {
-        m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+        // Start hopper only when it's in the correct position
+        auto hopperPosition = 5.0*m_hopperAltEncoder.GetPosition();
+        auto remainder = std::fabs(hopperPosition - std::round(hopperPosition));
+        if (remainder < 0.06) {
+          m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+        }
         m_hopperMotor.Set(0.3);
       }
     }
@@ -356,12 +365,23 @@ void Robot::TestInit() {
 
 void Robot::TestPeriodic()
 {
-  std::cout << "encoders: " 
+  /*std::cout << "encoders: " 
   << m_frontrightEncoder.GetPosition() << " "
   << m_backrightEncoder.GetPosition()  << " "
   << m_frontleftEncoder.GetPosition()  << " "
   << m_backleftEncoder.GetPosition()   << " "
-  << std::endl;
+  << std::endl;*/
+
+  std::cout << "hopper " << m_hopperAltEncoder.GetPosition() << std::endl;
+
+  // Start hopper only when it's in the correct position
+  auto hopperPosition = 5.0*m_hopperAltEncoder.GetPosition();
+  auto remainder = std::fabs(hopperPosition - std::round(hopperPosition));
+  std::cout << "rem " << remainder << std::endl;
+
+  if (remainder < 0.06) {
+    m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
+  }
 
   //std::cout << "turret: " << m_turretEncoder.GetPosition() << std::endl;
   //shooter//
