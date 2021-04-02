@@ -121,6 +121,10 @@ class Robot : public frc::TimedRobot {
   //colorwheel//
   rev::CANSparkMax m_colorwheelMotor{colorwheelMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANEncoder m_colorwheelEncoder = m_colorwheelMotor.GetEncoder();
+
+  // Alternate Encoder for Hopper
+  rev::CANEncoder m_hopperAltEncoder = m_hopperMotor.GetAlternateEncoder(rev::CANEncoder::AlternateEncoderType::kQuadrature, 8192);
+
   frc::Joystick m_stick{0};
   
   //pneumatics//
