@@ -75,13 +75,13 @@ class Drivetrain {
 
  private:
 
-  static constexpr double kP = 0.157; //2.77;                       // measured
-  static constexpr auto   kS = 0.27_V;                              // measured
-  static constexpr auto   kV = 1.53 * 1_V * 1_s / 1_m;              // measured
-  static constexpr auto   kA = 0.254 * 1_V * 1_s * 1_s / 1_m;       // measured
-  static constexpr units::meter_t kTrackWidth = 0.657_m;            // measured    
+  static constexpr double kP = 0.157; //2.77;                  // measured
+  static constexpr auto   kS = 0.27_V;                         // measured
+  static constexpr auto   kV = 1.53 * 1_V * 1_s / 1_m;         // measured
+  static constexpr auto   kA = 0.254 * 1_V * 1_s * 1_s / 1_m;  // measured
 
-  static constexpr double kDistancePerEncoderRotation = 0.0387; // / 1.125;     // measured (meters)  
+  units::meter_t kTrackWidth = 0.657_m;                        // measured    
+  double kDistancePerEncoderRotation = 0.0387;                 // measured (meters)  
 
   frc::SpeedControllerGroup* m_leftGroup;
   frc::SpeedControllerGroup* m_rightGroup;
