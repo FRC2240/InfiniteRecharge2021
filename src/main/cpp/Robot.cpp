@@ -237,7 +237,7 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic()
 {
-  std::cout << "hopper" << m_hopperAltEncoder.GetPosition() << std::endl;
+  //std::cout << "hopper" << m_hopperAltEncoder.GetPosition() << std::endl;
 
   // read drive input from joystick
   double move = m_stick.GetRawAxis(1);
@@ -265,7 +265,7 @@ void Robot::TeleopPeriodic()
       // Override for test/calibration?
       if (m_overrideShooterSpeed > 1.0) {
         rpm = m_overrideShooterSpeed;
-        frc::SmartDashboard::PutNumber("Output Speed", m_leftshooterEncoder.GetVelocity());
+        frc::SmartDashboard::PutNumber("Shooter Speed", m_leftshooterEncoder.GetVelocity());
       }
 
       if ((distance < 420) && (distance > 96)) {
@@ -282,16 +282,21 @@ void Robot::TeleopPeriodic()
         if (remainder < 0.06) {
           m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
         }
-        m_hopperMotor.Set(0.3);
+        if (!m_isShooting) {
+          m_hopperMotor.Set(0.3);
+          m_hopperTimer = 0;
+          m_isShooting = true;
+        }
       }
     }
   }
   else
   {
-    // Not shooting: Shooter off, Hopper off, Uptake down, and Turret centered
+    // Not shooting: Shooter off, Uptake down, and Turret centered
     m_table->PutNumber("pipeline", 1); // Set driving pipeline of Limelight
     m_leftshooterMotor.Set(0.0);
     m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
+    m_isShooting = false;
 
     //pipeline code
     if (m_stick.GetRawButtonPressed(4))
@@ -301,10 +306,10 @@ void Robot::TeleopPeriodic()
         m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
         m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
         m_intakeMotor.Set(-0.75);
-        m_hopperMotor.Set(0.2);
+        m_hopperMotor.Set(0.3);
         m_turretPID.SetReference(30.0, rev::ControlType::kPosition);
         m_isGathering = true;
-        m_gatherTimer = 0;
+        m_hopperTimer = 0;
       }
       else
       {
@@ -312,7 +317,7 @@ void Robot::TeleopPeriodic()
         m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
         m_intakeMotor.Set(0.0);
         m_isGathering = false;
-        m_gatherTimer = 0;
+        m_hopperTimer = 0;
         m_hopperReverse = false;
       }
     }
@@ -322,34 +327,36 @@ void Robot::TeleopPeriodic()
       m_intakeleft.Set(frc::DoubleSolenoid::Value::kForward);
       m_intakeright.Set(frc::DoubleSolenoid::Value::kForward);
     }
-
-    frc::SmartDashboard::PutNumber("Hopper Current", m_hopperMotor.GetOutputCurrent());
-    frc::SmartDashboard::PutNumber("Hopper Speed", m_hopperEncoder.GetVelocity());
-
-    // If gathering and the velocity drops, it's a jam!
-    // Reverse the hopper for a short period
-    if (m_isGathering && !m_hopperReverse && (m_hopperEncoder.GetVelocity() < 500.0) && (m_gatherTimer > 20)) {
-      m_hopperMotor.Set(0.0);
-      m_hopperReverse = true;
-      m_reverseTimer = 0;
-      m_hopperMotor.Set(-0.4);
-    }
-
-    // Hopper reverse complete?
-    if ((m_reverseTimer > 25) && m_hopperReverse) {
-      m_hopperMotor.Set(0.2);
-      m_hopperReverse = false;
-      m_gatherTimer = 0;
-    }
-
-    ++m_reverseTimer;
-    ++m_gatherTimer;
-
-    if ((m_gatherTimer > 2) && !m_isGathering)
-    {
-      m_hopperMotor.Set(0.0);
-    }
   }
+
+  frc::SmartDashboard::PutNumber("Hopper Speed", m_hopperEncoder.GetVelocity());
+
+  // If gathering/shooting and the velocity drops, it's a jam!
+  // Reverse the hopper for a short period
+  if ((m_isGathering || m_isShooting) &&
+      !m_hopperReverse &&
+      (m_hopperEncoder.GetVelocity() < 500.0) &&
+      (m_hopperTimer > 20)) {
+    m_hopperMotor.Set(0.0);
+    m_hopperReverse = true;
+    m_reverseTimer = 0;
+    m_hopperMotor.Set(-0.4);
+  }
+
+  // Hopper reverse complete?
+  if ((m_reverseTimer > 30) && m_hopperReverse) {
+    m_hopperMotor.Set(0.3);
+    m_hopperReverse = false;
+    m_hopperTimer = 0;
+  }
+
+  if (!m_isGathering && !m_isShooting)
+  {
+    m_hopperMotor.Set(0.0);
+  }
+
+  ++m_reverseTimer;
+  ++m_hopperTimer;
 }
 
 void Robot::DisabledInit() {}
