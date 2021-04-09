@@ -162,7 +162,7 @@ class Robot : public frc::TimedRobot {
 
   // DETERMINE THESE EXPERIMENTALLY!!!!!!!
   // pidCoeff ----------------{kP, kI, kD, kIz, kFF, kMinOutput, kMaxOutput}
-  pidCoeff m_shooterPIDCoeff {0.00025, 0.0, 0.001, 0.0, 0.000206, -1.0, 1.0};
+  pidCoeff m_shooterPIDCoeff {0.0005, 0.00000004, 0.03, 0.0, 0.000202, -1.0, 1.0};
   pidCoeff m_turretPIDCoeff {0.02, 0.0, 0.0, 0.0, 0.0, -0.5, 0.5};
 
   frc::Timer m_autoTimer;
