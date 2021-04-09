@@ -70,9 +70,9 @@ void Robot::RobotInit()
   m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
   m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
 
-  frc::SmartDashboard::PutNumber("Shooter Speed", m_overrideShooterSpeed);
+  frc::SmartDashboard::PutNumber("Override Speed", m_overrideShooterSpeed);
   frc::SmartDashboard::PutNumber("P Gain", m_shooterPIDCoeff.kP);
-  frc::SmartDashboard::PutNumber("I Gain", m_shooterPIDCoeff.kI);
+  //frc::SmartDashboard::PutNumber("I Gain", m_shooterPIDCoeff.kI);
   frc::SmartDashboard::PutNumber("D Gain", m_shooterPIDCoeff.kD);
   frc::SmartDashboard::PutNumber("I Zone", m_shooterPIDCoeff.kIz);
   frc::SmartDashboard::PutNumber("Feed Forward", m_shooterPIDCoeff.kFF);
@@ -222,10 +222,10 @@ void Robot::AutonomousPeriodic()
 }
 
 void Robot::TeleopInit() {
-  m_overrideShooterSpeed       = frc::SmartDashboard::GetNumber("Shooter Speed", 0);
+  m_overrideShooterSpeed       = frc::SmartDashboard::GetNumber("Override Speed", 0);
   m_txOFFSET                   = frc::SmartDashboard::GetNumber("tx offset", m_txOFFSET);
   m_shooterPIDCoeff.kP         = frc::SmartDashboard::GetNumber("P Gain", m_shooterPIDCoeff.kP);
-  m_shooterPIDCoeff.kI         = frc::SmartDashboard::GetNumber("I Gain", m_shooterPIDCoeff.kI);
+  //m_shooterPIDCoeff.kI         = frc::SmartDashboard::GetNumber("I Gain", m_shooterPIDCoeff.kI);
   m_shooterPIDCoeff.kD         = frc::SmartDashboard::GetNumber("D Gain", m_shooterPIDCoeff.kD);
   m_shooterPIDCoeff.kIz        = frc::SmartDashboard::GetNumber("I Zone", m_shooterPIDCoeff.kIz);
   m_shooterPIDCoeff.kFF        = frc::SmartDashboard::GetNumber("Feed Forward", m_shooterPIDCoeff.kFF);
@@ -237,15 +237,13 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic()
 {
-  //std::cout << "hopper" << m_hopperAltEncoder.GetPosition() << std::endl;
-
   // read drive input from joystick
   double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
 
   //bool isQuickTurn = true;
   //m_robotDrive.CurvatureDrive(move, -rotate, isQuickTurn);
-  m_robotDrive.ArcadeDrive(move, -0.5*rotate);
+  m_robotDrive.ArcadeDrive(move, -0.75*rotate);
 
   // Shooting?
   if (fabs(m_stick.GetRawAxis(3)) > 0.75)
@@ -283,7 +281,7 @@ void Robot::TeleopPeriodic()
           m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
         }
         if (!m_isShooting) {
-          m_hopperMotor.Set(0.3);
+          m_hopperMotor.Set(0.25);
           m_hopperTimer = 0;
           m_isShooting = true;
         }
@@ -306,7 +304,7 @@ void Robot::TeleopPeriodic()
         m_intakeleft.Set(frc::DoubleSolenoid::Value::kReverse);
         m_intakeright.Set(frc::DoubleSolenoid::Value::kReverse);
         m_intakeMotor.Set(-0.75);
-        m_hopperMotor.Set(0.3);
+        m_hopperMotor.Set(0.25);
         m_turretPID.SetReference(30.0, rev::ControlType::kPosition);
         m_isGathering = true;
         m_hopperTimer = 0;
@@ -329,7 +327,7 @@ void Robot::TeleopPeriodic()
     }
   }
 
-  frc::SmartDashboard::PutNumber("Hopper Speed", m_hopperEncoder.GetVelocity());
+  //frc::SmartDashboard::PutNumber("Hopper Speed", m_hopperEncoder.GetVelocity());
 
   // If gathering/shooting and the velocity drops, it's a jam!
   // Reverse the hopper for a short period
@@ -345,7 +343,7 @@ void Robot::TeleopPeriodic()
 
   // Hopper reverse complete?
   if ((m_reverseTimer > 30) && m_hopperReverse) {
-    m_hopperMotor.Set(0.3);
+    m_hopperMotor.Set(0.25);
     m_hopperReverse = false;
     m_hopperTimer = 0;
   }
@@ -573,7 +571,9 @@ bool Robot::LimelightTracking()
 double Robot::CalculateRPM(double d)
 {
   //double rpm = 0.0169 * d * d - 4.12 * d + 2614.5;
-  double rpm = 0.01474 * d * d - 3.573 * d + 2588.0;
+  //double rpm = 0.01474 * d * d - 3.573 * d + 2588.0;
+  //double rpm = 0.0273 * d * d - 6.27 * d + 2901.3;
+  double rpm = 0.0285 * d * d - 4.60 * d + 2480.0;
   return rpm;
 }
 
