@@ -76,12 +76,12 @@ void Robot::RobotInit()
   m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
   m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);\
 
-  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
-  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
-  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
-  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
+  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0);
+  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0);
 
   // Start compressor
   m_compressor.Start();
@@ -382,12 +382,12 @@ void Robot::TeleopPeriodic()
 
 if (m_stick.GetRawButtonPressed(3)) {
   m_raisingMotor.Set(1.0);
-  m_climbing = true;
+  m_isClimbing = true;
 
 }
 
 if (m_stick.GetRawButtonPressed(1)) {
-  if (m_climbing = true) {
+  if (m_isClimbing = true) {
     m_rightelevatingMotor.Set(1.0);
   }
 
