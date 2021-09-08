@@ -40,6 +40,8 @@ void Robot::RobotInit()
   m_frontleftMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
   m_frontrightMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 
+
+
   // Set back motors to follow front motors
   m_backleftMotor.Follow(m_frontleftMotor);
   m_backrightMotor.Follow(m_frontrightMotor);
@@ -60,6 +62,26 @@ void Robot::RobotInit()
   m_turretMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 67.0);
 
   m_hopperAltEncoder.SetPosition(0.0);
+
+  //Set climber motors equal
+
+  m_leftelevatingMotor.Follow(m_rightelevatingMotor, true);
+
+  // Climber soft stops
+
+  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
+  m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
+  m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);\
+
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
+  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
 
   // Start compressor
   m_compressor.Start();
@@ -355,6 +377,24 @@ void Robot::TeleopPeriodic()
 
   ++m_reverseTimer;
   ++m_hopperTimer;
+
+//climb//
+
+if (m_stick.GetRawButtonPressed(3)) {
+  m_raisingMotor.Set(1.0);
+  m_climbing = true;
+
+}
+
+if (m_stick.GetRawButtonPressed(1)) {
+  if (m_climbing = true) {
+    m_rightelevatingMotor.Set(1.0);
+  }
+
+}
+
+
+
 }
 
 void Robot::DisabledInit() {}
