@@ -436,12 +436,12 @@ void Robot::TestPeriodic()
 {
   if (m_stick.GetRawButton(3)) {
     m_leftelevatingMotor.Set(-.25);
-    m_rightelevatingMotor.Set(-.25);
+    //m_rightelevatingMotor.Set(-.25);
 }
 
   else {
     m_leftelevatingMotor.Set(0);
-    m_rightelevatingMotor.Set(0);
+    //m_rightelevatingMotor.Set(0);
 }
 }
 
