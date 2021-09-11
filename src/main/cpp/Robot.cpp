@@ -65,7 +65,6 @@ void Robot::RobotInit()
 
   //Set climber motors equal
 
-  m_leftelevatingMotor.Follow(m_rightelevatingMotor, true);
 
   // Climber soft stops
 
@@ -377,7 +376,7 @@ void Robot::TeleopPeriodic()
   ++m_hopperTimer;
 
 //climb//
-
+/*
 if (m_stick.GetRawButtonPressed(3)) {
   m_raisingMotor.Set(1.0);
   m_isClimbing = true;
@@ -393,8 +392,13 @@ if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = t
   m_rightelevatingMotor.Set(-1.0);
 
 }
+*/
+// elevation test
+if (m_stick.GetRawButtonPressed(3)) {
+m_leftelevatingMotor.Set(.25);
+}
 
-// color wheel (ask Erik about specific button and how to get a hold down command//
+// color wheel (ask Erik about specific button and how to get a hold down command)//
 
 if (m_stick.GetRawButtonPressed(5)) {
   m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
