@@ -384,10 +384,13 @@ if (m_stick.GetRawButtonPressed(3)) {
 
 }
 
-if (m_stick.GetRawButtonPressed(1)) {
-  if (m_isClimbing = true) {
-    m_rightelevatingMotor.Set(1.0);
-  }
+if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true)) {
+  m_rightelevatingMotor.Set(1.0);
+  m_isElevated = true;
+}
+
+if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = true)) {
+  m_rightelevatingMotor.Set(-1.0);
 
 }
 

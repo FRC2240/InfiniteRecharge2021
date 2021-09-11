@@ -145,6 +145,7 @@ class Robot : public frc::TimedRobot {
   //climbing//
 
   bool m_isClimbing = false;
+  bool m_isElevated = false;
 
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
