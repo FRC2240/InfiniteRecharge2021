@@ -394,6 +394,14 @@ if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = t
 
 }
 
+// color wheel (ask Erik about specific button and how to get a hold down command//
+
+if (m_stick.GetRawButtonPressed(5)) {
+  m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
+  m_colorwheelMotor.Set(1.0);
+}
+
+
 
 
 }
