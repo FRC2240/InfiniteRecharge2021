@@ -63,12 +63,12 @@ void Robot::RobotInit()
 
   m_hopperAltEncoder.SetPosition(0.0);
 
-  //Set climber motors equal
-
-
-  // Climber soft stops
-
   
+
+
+  // Climber soft stops (1 rotation = 2 in and 9/16)
+
+  /*
   m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
   m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
   m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
@@ -77,9 +77,13 @@ void Robot::RobotInit()
   //we don't know which was is forward or reverse, but it take 15 rotations to go up//
   m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
   m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 1);
   m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
-
+*/
+  // set climber encoders to zero
+  m_rightelevatingEncoder.SetPosition(0.0);
+  m_leftshooterEncoder.SetPosition(0.0);
+  m_raisingEncoder.SetPosition(0.0);
   // Start compressor
   m_compressor.Start();
 
@@ -394,16 +398,23 @@ if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = t
 }
 */
 // elevation test
-if (m_stick.GetRawButtonPressed(3)) {
-m_leftelevatingMotor.Set(.25);
+if (m_stick.GetRawButton(3)) {
+  m_leftelevatingMotor.Set(.25);
+  m_rightelevatingMotor.Set(.25);
+}
+
+else {
+  m_leftelevatingMotor.Set(0);
+  m_rightelevatingMotor.Set(0);
 }
 
 // color wheel (ask Erik about specific button and how to get a hold down command)//
 
-if (m_stick.GetRawButtonPressed(5)) {
+if (m_stick.GetRawButton(5)) {
   m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
   m_colorwheelMotor.Set(1.0);
 }
+
 
 
 
@@ -423,171 +434,15 @@ void Robot::TestInit() {
 
 void Robot::TestPeriodic()
 {
-  /*std::cout << "encoders: " 
-  << m_frontrightEncoder.GetPosition() << " "
-  << m_backrightEncoder.GetPosition()  << " "
-  << m_frontleftEncoder.GetPosition()  << " "
-  << m_backleftEncoder.GetPosition()   << " "
-  << std::endl;*/
+  if (m_stick.GetRawButton(3)) {
+    m_leftelevatingMotor.Set(-.25);
+    m_rightelevatingMotor.Set(-.25);
+}
 
-  std::cout << "hopper " << m_hopperAltEncoder.GetPosition() << std::endl;
-
-  // Start hopper only when it's in the correct position
-  auto hopperPosition = 5.0*m_hopperAltEncoder.GetPosition();
-  auto remainder = std::fabs(hopperPosition - std::round(hopperPosition));
-  std::cout << "rem " << remainder << std::endl;
-
-  if (remainder < 0.06) {
-    m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-  }
-
-  //std::cout << "turret: " << m_turretEncoder.GetPosition() << std::endl;
-  //shooter//
-
-  bool shooterButton = m_stick.GetRawButton(1);
-
-  if (shooterButton)
-  {
-    m_rightshooterMotor.Set(-1.0);
-  }
-  else
-  {
-    m_rightshooterMotor.Set(0.0);
-  }
-
-  //hopper//
-
-  bool hopperButton = m_stick.GetRawButton(2);
-
-  if (hopperButton)
-  {
-    m_hopperMotor.Set(0.2);
-  }
-  else
-  {
-    m_hopperMotor.Set(0.0);
-  }
-
-  //turrett//
-
-  bool turretButton = m_stick.GetRawButton(3);
-  //double move = m_stick.GetRawAxis(1);
-  //m_turretMotor.Set(move);
-
-  if (turretButton)
-  {
-    m_turretMotor.Set(0.1);
-  }
-  else
-  {
-    m_turretMotor.Set(0.0);
-  }
-
-  //uptake//
-
-  bool uptakeButton = m_stick.GetRawButton(4);
-
-  if (uptakeButton)
-  {
-    m_uptake.Set(frc::DoubleSolenoid::Value::kReverse);
-  }
-  else
-  {
-    m_uptake.Set(frc::DoubleSolenoid::Value::kForward);
-  }
-  // color wheel
-  bool colorWheelTest = m_stick.GetRawButton(1);
-  if (colorWheelTest)
-  {
-    m_colorwheelMotor.Set(1.0);
-  }
-  else
-  {
-    m_colorwheelMotor.Set(0);
-  }
-  // intake
-  /*bool intakeButton = m_stick.GetRawButton(2);
-  if (intakeButton)
-  {
-    m_intakeMotor.Set(1.0);
-  }
-  else
-  {
-    m_intakeMotor.Set(0);
-  }*/
-  // climber
-  /*
-  bool raisingButton = m_stick.GetRawButton(3);
-  if (raisingButton) {
-    m_raisingMotor.Set(1.0);
-  }
-  else {
-    m_raisingMotor.Set(0);
-  }
-  bool leftClimberButton = m_stick.GetRawButton(4);
-  if (leftClimberButton){
-    m_leftelevatingMotor.Set(1.0);
-  }
   else {
     m_leftelevatingMotor.Set(0);
-  }
-  bool rightClimberButton = m_stick.GetRawButton(5);
-  if (rightClimberButton) {
-    m_rightelevatingMotor.Set(1.0);
-  }
-  else {
     m_rightelevatingMotor.Set(0);
-  }
-
-*/
-  //frontright
-
-  bool frontrightButton = m_stick.GetRawButton(6);
-
-  if (frontrightButton)
-  {
-    m_frontrightMotor.Set(1.0);
-  }
-  else
-  {
-    m_frontrightMotor.Set(0.0);
-  }
-  //backright
-
-  bool backrightButton = m_stick.GetRawButton(7);
-
-  if (backrightButton)
-  {
-    m_backrightMotor.Set(1.0);
-  }
-  else
-  {
-    m_backrightMotor.Set(0.0);
-  }
-  //frontleft
-
-  bool frontleftButton = m_stick.GetRawButton(8);
-
-  if (frontleftButton)
-  {
-    m_frontleftMotor.Set(1.0);
-  }
-  else
-  {
-    m_frontleftMotor.Set(0.0);
-  }
-
-  //backleft
-  bool backleftButton = m_stick.GetRawButton(9);
-
-  if (backleftButton)
-  {
-    m_backleftMotor.Set(1.0);
-  }
-  else
-  {
-    m_backleftMotor.Set(0.0);
-  }
+}
 }
 
 bool Robot::LimelightTracking()
