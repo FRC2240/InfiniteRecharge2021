@@ -68,22 +68,29 @@ void Robot::RobotInit()
 
   // Climber soft stops (1 rotation = 2 in and 9/16)
 
-  /*
+  
+  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse,true);
   m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
   m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward,true);
   m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
   m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
 
   //we don't know which was is forward or reverse, but it take 15 rotations to go up//
+  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0);
   m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
   m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 1);
+  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
   m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
-*/
+
   // set climber encoders to zero
   m_rightelevatingEncoder.SetPosition(0.0);
-  m_leftshooterEncoder.SetPosition(0.0);
   m_raisingEncoder.SetPosition(0.0);
+
+
+  m_leftshooterEncoder.SetPosition(0.0);
+  
   // Start compressor
   m_compressor.Start();
 
@@ -398,11 +405,22 @@ if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = t
 }
 */
 // elevation test
-if (m_stick.GetRawButton(3)) {
-  m_leftelevatingMotor.Set(.25);
-  m_rightelevatingMotor.Set(.25);
+if (m_stick.GetRawButton(1)) {
+  m_raisingMotor.Set(1.0);
 }
 
+else {
+  m_raisingMotor.Set(0.0);
+}
+if (m_stick.GetRawButton(5)) {
+  m_leftelevatingMotor.Set(.25);
+  m_rightelevatingMotor.Set(-.25);
+}
+
+if (m_stick.GetRawButton(6)) {
+  m_leftelevatingMotor.Set(-.25);
+  m_rightelevatingMotor.Set(.25);
+}
 else {
   m_leftelevatingMotor.Set(0);
   m_rightelevatingMotor.Set(0);
@@ -413,6 +431,11 @@ else {
 if (m_stick.GetRawButton(5)) {
   m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
   m_colorwheelMotor.Set(1.0);
+}
+
+else {
+  m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
+  m_colorwheelMotor.Set(0.0);
 }
 
 
@@ -434,15 +457,7 @@ void Robot::TestInit() {
 
 void Robot::TestPeriodic()
 {
-  if (m_stick.GetRawButton(3)) {
-    m_leftelevatingMotor.Set(-.25);
-    //m_rightelevatingMotor.Set(-.25);
-}
-
-  else {
-    m_leftelevatingMotor.Set(0);
-    //m_rightelevatingMotor.Set(0);
-}
+  
 }
 
 bool Robot::LimelightTracking()
