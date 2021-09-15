@@ -403,7 +403,7 @@ if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = t
   m_rightelevatingMotor.Set(-1.0);
 
 }
-*/
+
 // elevation test
 if (m_stick.GetRawButton(1)) {
   m_raisingMotor.Set(1.0);
@@ -437,7 +437,7 @@ else {
   m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
   m_colorwheelMotor.Set(0.0);
 }
-
+*/
 
 
 
