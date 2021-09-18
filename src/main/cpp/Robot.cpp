@@ -82,7 +82,7 @@ void Robot::RobotInit()
   m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
   m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
   m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
-  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
+  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15); 
 
   // set climber encoders to zero
   m_rightelevatingEncoder.SetPosition(0.0);
@@ -403,21 +403,22 @@ if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = t
   m_rightelevatingMotor.Set(-1.0);
 
 }
-
+*/
 // elevation test
-if (m_stick.GetRawButton(1)) {
+/* if (m_stick.GetRawButton(1)) {
   m_raisingMotor.Set(1.0);
 }
 
 else {
   m_raisingMotor.Set(0.0);
 }
-if (m_stick.GetRawButton(5)) {
+*/
+if (m_stick.GetRawButton(3)) {
   m_leftelevatingMotor.Set(.25);
   m_rightelevatingMotor.Set(-.25);
 }
 
-if (m_stick.GetRawButton(6)) {
+if (m_stick.GetRawButton(1)) {
   m_leftelevatingMotor.Set(-.25);
   m_rightelevatingMotor.Set(.25);
 }
@@ -437,7 +438,7 @@ else {
   m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
   m_colorwheelMotor.Set(0.0);
 }
-*/
+
 
 
 
