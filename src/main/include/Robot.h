@@ -113,6 +113,8 @@ class Robot : public frc::TimedRobot {
   rev::CANEncoder m_raisingEncoder = m_raisingMotor.GetEncoder();
   rev::CANEncoder m_rightelevatingEncoder = m_rightelevatingMotor.GetEncoder();
   rev::CANEncoder m_leftelevatingEncoder = m_leftelevatingMotor.GetEncoder();
+
+  rev::CANPIDController m_raisingPID = m_raisingMotor.GetPIDController();
   
   //intake//
   rev::CANSparkMax m_intakeMotor{intakeMotorDeviceID, rev::CANSparkMax::MotorType::kBrushless};
@@ -170,6 +172,7 @@ class Robot : public frc::TimedRobot {
   // pidCoeff ----------------{kP, kI, kD, kIz, kFF, kMinOutput, kMaxOutput}
   pidCoeff m_shooterPIDCoeff {0.0005, 0.00000004, 0.03, 0.0, 0.000202, -1.0, 1.0};
   pidCoeff m_turretPIDCoeff {0.02, 0.0, 0.0, 0.0, 0.0, -0.5, 0.5};
+  pidCoeff m_raisingPIDCoeff {0.02, 0.0, 0.0, 0.0, 0.0, -0.5, 0.5};
 
   frc::Timer m_autoTimer;
 
