@@ -82,11 +82,11 @@ void Robot::RobotInit()
   m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
 
   // Set Climber Soft Limits
-  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
-  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 1000);
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0.0);
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 600.0);
 
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 1000);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0.0);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 600.0);
 
   // Start compressor
   m_compressor.Start();
@@ -386,29 +386,45 @@ void Robot::TeleopPeriodic()
 
 
   // Raise arms
-  if (m_stick.GetRawButtonPressed(8)) {
-    m_raisingPID.SetReference(10.0, rev::ControlType::kPosition);
+  if (m_stick.GetRawButtonPressed(7)) {
+    m_raisingPID.SetReference(18.9, rev::ControlType::kSmartMotion);
   }
 
   // Lower arms
-  if (m_stick.GetRawButtonPressed(9)) {
-    m_raisingPID.SetReference(0.0, rev::ControlType::kPosition);
+  if (m_stick.GetRawButtonPressed(8)) {
+    m_raisingPID.SetReference(0.0, rev::ControlType::kSmartMotion);
   }
 
   // Extend or retract climb arms
   if (m_stick.GetRawButton(3)) {
-    m_leftelevatingMotor.Set(-0.25);
-    m_rightelevatingMotor.Set(-0.25);
-    std::cout << "encs: " << m_leftelevatingEncoder.GetPosition() << "  " << m_rightelevatingEncoder.GetPosition() << std::endl;
+    if ((m_leftelevatingEncoder.GetPosition() < 50.0) || (m_leftelevatingEncoder.GetPosition() > 550.0)) {
+      m_leftelevatingMotor.Set(-0.25);
+    } else {
+      m_leftelevatingMotor.Set(-1.0);
+    }
+    if ((m_rightelevatingEncoder.GetPosition() < 50.0) || (m_rightelevatingEncoder.GetPosition() > 550.0)) {
+      m_rightelevatingMotor.Set(-0.25);
+    } else {
+      m_rightelevatingMotor.Set(-1.0);
+    }
+    //std::cout << "enc: " << m_leftelevatingEncoder.GetPosition() << "  " << m_rightelevatingEncoder.GetPosition() << std::endl;
   }
   else if (m_stick.GetRawButton(1)) {
-    std::cout << "encs: " << m_leftelevatingEncoder.GetPosition() << "  " << m_rightelevatingEncoder.GetPosition() << std::endl;
-    m_leftelevatingMotor.Set(0.25);
-    m_rightelevatingMotor.Set(0.25);
+    if ((m_leftelevatingEncoder.GetPosition() < 50.0) || (m_leftelevatingEncoder.GetPosition() > 550.0)) {
+      m_leftelevatingMotor.Set(0.25);
+    } else {
+      m_leftelevatingMotor.Set(1.0);
+    }
+    if ((m_rightelevatingEncoder.GetPosition() < 50.0) || (m_rightelevatingEncoder.GetPosition() > 550.0)) {
+      m_rightelevatingMotor.Set(0.25);
+    } else {
+      m_rightelevatingMotor.Set(1.0);
+    }
+    //std::cout << "enc: " << m_leftelevatingEncoder.GetPosition() << "  " << m_rightelevatingEncoder.GetPosition() << std::endl;
   }
   else {
-    m_leftelevatingMotor.Set(0);
-    m_rightelevatingMotor.Set(0);
+    m_leftelevatingMotor.Set(0.0);
+    m_rightelevatingMotor.Set(0.0);
   }
 
   // color wheel (ask Erik about specific button and how to get a hold down command)//
@@ -504,7 +520,15 @@ void Robot::InitializePIDControllers()
   m_raisingPID.SetD(m_raisingPIDCoeff.kD);
   m_raisingPID.SetIZone(m_raisingPIDCoeff.kIz);
   m_raisingPID.SetFF(m_raisingPIDCoeff.kFF);
-  m_raisingPID.SetOutputRange(m_raisingPIDCoeff.kMinOutput, m_raisingPIDCoeff.kMaxOutput); 
+  m_raisingPID.SetOutputRange(m_raisingPIDCoeff.kMinOutput, m_raisingPIDCoeff.kMaxOutput);
+
+  // default smart motion coefficients
+  double kMaxVel = 550, kMinVel = 0, kMaxAcc = 250, kAllErr = 0;
+
+  m_raisingPID.SetSmartMotionMaxVelocity(kMaxVel);
+  m_raisingPID.SetSmartMotionMinOutputVelocity(kMinVel);
+  m_raisingPID.SetSmartMotionMaxAccel(kMaxAcc);
+  m_raisingPID.SetSmartMotionAllowedClosedLoopError(kAllErr);
 }
 
 void Robot::AutoSimpleGame()
