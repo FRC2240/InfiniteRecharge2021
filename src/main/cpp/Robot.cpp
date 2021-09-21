@@ -12,7 +12,7 @@ void Robot::RobotInit()
 {
   std::cout << "Robot Init" << std::endl;
 
-  m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
+  m_chooser.SetDefaultOption(kAutoNameSimpleGame, kAutoNameSimpleGame);
   m_chooser.AddOption(kAutoNameSimpleGame, kAutoNameSimpleGame);
   m_chooser.AddOption(kAutoNamePathweaverGame, kAutoNamePathweaverGame);
 
@@ -34,6 +34,9 @@ void Robot::RobotInit()
   m_backrightMotor.RestoreFactoryDefaults();
   m_frontleftMotor.RestoreFactoryDefaults();
   m_frontrightMotor.RestoreFactoryDefaults();
+  m_leftelevatingMotor.RestoreFactoryDefaults();
+  m_rightelevatingMotor.RestoreFactoryDefaults();
+
 
   m_backleftMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
   m_backrightMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
@@ -64,33 +67,27 @@ void Robot::RobotInit()
   m_hopperAltEncoder.SetPosition(0.0);
 
   
-
+  // set climber encoders to zero
+  m_raisingEncoder.SetPosition(0.0);
+  m_leftelevatingEncoder.SetPosition(0.0);
+  m_rightelevatingEncoder.SetPosition(0.0);
 
   // Climber soft stops (1 rotation = 2 in and 9/16)
 
-  
+  // Enable Climber Soft Limits
   m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse,true);
-  m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
-  m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
   m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward,true);
+
+  m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
   m_rightelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
-  m_raisingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
 
-  //we don't know which was is forward or reverse, but it take 15 rotations to go up//
-  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
-  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0);
-  m_leftelevatingMotor.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15);
-  m_raisingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 15); 
+  // Set Climber Soft Limits
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0.0);
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 600.0);
 
-  // set climber encoders to zero
-  m_rightelevatingEncoder.SetPosition(0.0);
-  m_raisingEncoder.SetPosition(0.0);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0.0);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 600.0);
 
-
-  m_leftshooterEncoder.SetPosition(0.0);
-  
   // Start compressor
   m_compressor.Start();
 
@@ -147,6 +144,7 @@ void Robot::AutonomousInit()
 
   if (m_autoSelected == kAutoNameSimpleGame)
   {
+    std::cout << "Start Simple Game" << std::endl;
     m_autoTimer.Start();
     return;
   }
@@ -386,63 +384,62 @@ void Robot::TeleopPeriodic()
   ++m_reverseTimer;
   ++m_hopperTimer;
 
-//climb//
-/*
-if (m_stick.GetRawButtonPressed(3)) {
-  m_raisingMotor.Set(1.0);
-  m_isClimbing = true;
 
-}
+  // Raise arms
+  if (m_stick.GetRawButtonPressed(7)) {
+    m_raisingPID.SetReference(18.9, rev::ControlType::kSmartMotion);
+  }
 
-if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true)) {
-  m_rightelevatingMotor.Set(1.0);
-  m_isElevated = true;
-}
+  // Lower arms
+  if (m_stick.GetRawButtonPressed(8)) {
+    m_raisingPID.SetReference(0.0, rev::ControlType::kSmartMotion);
+  }
 
-if (m_stick.GetRawButtonPressed(1) && (m_isClimbing = true) && (m_isElevated = true)) {
-  m_rightelevatingMotor.Set(-1.0);
+  // Extend or retract climb arms
+  if (m_stick.GetRawButton(3)) {
+    if ((m_leftelevatingEncoder.GetPosition() < 50.0) || (m_leftelevatingEncoder.GetPosition() > 550.0)) {
+      m_leftelevatingMotor.Set(-0.25);
+    } else {
+      m_leftelevatingMotor.Set(-1.0);
+    }
+    if ((m_rightelevatingEncoder.GetPosition() < 50.0) || (m_rightelevatingEncoder.GetPosition() > 550.0)) {
+      m_rightelevatingMotor.Set(-0.25);
+    } else {
+      m_rightelevatingMotor.Set(-1.0);
+    }
+    //std::cout << "enc: " << m_leftelevatingEncoder.GetPosition() << "  " << m_rightelevatingEncoder.GetPosition() << std::endl;
+  }
+  else if (m_stick.GetRawButton(1)) {
+    if ((m_leftelevatingEncoder.GetPosition() < 50.0) || (m_leftelevatingEncoder.GetPosition() > 550.0)) {
+      m_leftelevatingMotor.Set(0.25);
+    } else {
+      m_leftelevatingMotor.Set(1.0);
+    }
+    if ((m_rightelevatingEncoder.GetPosition() < 50.0) || (m_rightelevatingEncoder.GetPosition() > 550.0)) {
+      m_rightelevatingMotor.Set(0.25);
+    } else {
+      m_rightelevatingMotor.Set(1.0);
+    }
+    //std::cout << "enc: " << m_leftelevatingEncoder.GetPosition() << "  " << m_rightelevatingEncoder.GetPosition() << std::endl;
+  }
+  else {
+    m_leftelevatingMotor.Set(0.0);
+    m_rightelevatingMotor.Set(0.0);
+  }
 
-}
-*/
-// elevation test
-/* if (m_stick.GetRawButton(1)) {
-  m_raisingMotor.Set(1.0);
-}
-
-else {
-  m_raisingMotor.Set(0.0);
-}
-*/
-if (m_stick.GetRawButton(3)) {
-  m_leftelevatingMotor.Set(.25);
-  m_rightelevatingMotor.Set(-.25);
-}
-
-if (m_stick.GetRawButton(1)) {
-  m_leftelevatingMotor.Set(-.25);
-  m_rightelevatingMotor.Set(.25);
-}
-else {
-  m_leftelevatingMotor.Set(0);
-  m_rightelevatingMotor.Set(0);
-}
-
-// color wheel (ask Erik about specific button and how to get a hold down command)//
-
-if (m_stick.GetRawButton(5)) {
-  m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
-  m_colorwheelMotor.Set(1.0);
-}
-
-else {
-  m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
-  m_colorwheelMotor.Set(0.0);
-}
-
-
-
-
-
+  // color wheel (ask Erik about specific button and how to get a hold down command)//
+  if (m_stick.GetRawButtonPressed(5))
+  {
+    if (m_colorwheel.Get() == frc::DoubleSolenoid::Value::kForward)
+    {
+      m_colorwheel.Set(frc::DoubleSolenoid::Value::kReverse);
+      m_colorwheelMotor.Set(1.0);
+    }
+    else {
+      m_colorwheel.Set(frc::DoubleSolenoid::Value::kForward);
+      m_colorwheelMotor.Set(0.0);
+    }
+  }
 }
 
 void Robot::DisabledInit() {}
@@ -517,6 +514,21 @@ void Robot::InitializePIDControllers()
   m_turretPID.SetIZone(m_turretPIDCoeff.kIz);
   m_turretPID.SetFF(m_turretPIDCoeff.kFF);
   m_turretPID.SetOutputRange(m_turretPIDCoeff.kMinOutput, m_turretPIDCoeff.kMaxOutput);
+
+  m_raisingPID.SetP(m_raisingPIDCoeff.kP);
+  m_raisingPID.SetI(m_raisingPIDCoeff.kI);
+  m_raisingPID.SetD(m_raisingPIDCoeff.kD);
+  m_raisingPID.SetIZone(m_raisingPIDCoeff.kIz);
+  m_raisingPID.SetFF(m_raisingPIDCoeff.kFF);
+  m_raisingPID.SetOutputRange(m_raisingPIDCoeff.kMinOutput, m_raisingPIDCoeff.kMaxOutput);
+
+  // default smart motion coefficients
+  double kMaxVel = 550, kMinVel = 0, kMaxAcc = 250, kAllErr = 0;
+
+  m_raisingPID.SetSmartMotionMaxVelocity(kMaxVel);
+  m_raisingPID.SetSmartMotionMinOutputVelocity(kMinVel);
+  m_raisingPID.SetSmartMotionMaxAccel(kMaxAcc);
+  m_raisingPID.SetSmartMotionAllowedClosedLoopError(kAllErr);
 }
 
 void Robot::AutoSimpleGame()
