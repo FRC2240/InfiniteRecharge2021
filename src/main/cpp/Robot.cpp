@@ -494,7 +494,7 @@ double Robot::CalculateRPM(double d)
   //double rpm = 0.0169 * d * d - 4.12 * d + 2614.5;
   //double rpm = 0.01474 * d * d - 3.573 * d + 2588.0;
   //double rpm = 0.0273 * d * d - 6.27 * d + 2901.3;
-  double rpm = 0.0285 * d * d - 4.60 * d + 2480.0;
+  double rpm = 0.01132 * d * d - 0.762 * d + 2290.1;
   return rpm;
 }
 
@@ -534,7 +534,11 @@ void Robot::InitializePIDControllers()
 void Robot::AutoSimpleGame()
 {
   if (m_autoTimer.Get() <= 0.25) {
-    m_robotDrive.ArcadeDrive(-0.5, 0);
+    m_robotDrive.ArcadeDrive(0.5, 0);
+  }
+
+  else {
+    m_robotDrive.ArcadeDrive(0, 0);
   }
 
   if (m_autoTimer.Get() >= 2 && m_autoTimer.Get() <= 10) {

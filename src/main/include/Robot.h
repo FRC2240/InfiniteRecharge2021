@@ -152,7 +152,7 @@ class Robot : public frc::TimedRobot {
 
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
-  double tx_OFFSET = 0.0; // old = 3.0
+  double tx_OFFSET = 2.0; // old = 3.0
 
   // Override Shooter speed for calibration/testing
   double m_overrideShooterSpeed = 0.0;
@@ -176,7 +176,7 @@ class Robot : public frc::TimedRobot {
 
   frc::Timer m_autoTimer;
 
-  double m_txOFFSET = 2.0;
+  double m_txOFFSET = 3.0;
 
   // **** RAMSETE Control **** //
   Drivetrain* m_drive;
