@@ -83,10 +83,10 @@ void Robot::RobotInit()
 
   // Set Climber Soft Limits
   m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0.0);
-  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 600.0);
+  m_leftelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 1400.0);
 
   m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, 0.0);
-  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 600.0);
+  m_rightelevatingMotor.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 1400.0);
 
   // Start compressor
   m_compressor.Start();
@@ -397,12 +397,12 @@ void Robot::TeleopPeriodic()
 
   // Extend or retract climb arms
   if (m_stick.GetRawButton(3)) {
-    if ((m_leftelevatingEncoder.GetPosition() < 50.0) || (m_leftelevatingEncoder.GetPosition() > 550.0)) {
+    if ((m_leftelevatingEncoder.GetPosition() < 100.0) || (m_leftelevatingEncoder.GetPosition() > 1300.0)) {
       m_leftelevatingMotor.Set(-0.25);
     } else {
       m_leftelevatingMotor.Set(-1.0);
     }
-    if ((m_rightelevatingEncoder.GetPosition() < 50.0) || (m_rightelevatingEncoder.GetPosition() > 550.0)) {
+    if ((m_rightelevatingEncoder.GetPosition() < 100.0) || (m_rightelevatingEncoder.GetPosition() > 1300.0)) {
       m_rightelevatingMotor.Set(-0.25);
     } else {
       m_rightelevatingMotor.Set(-1.0);
@@ -410,12 +410,12 @@ void Robot::TeleopPeriodic()
     //std::cout << "enc: " << m_leftelevatingEncoder.GetPosition() << "  " << m_rightelevatingEncoder.GetPosition() << std::endl;
   }
   else if (m_stick.GetRawButton(1)) {
-    if ((m_leftelevatingEncoder.GetPosition() < 50.0) || (m_leftelevatingEncoder.GetPosition() > 550.0)) {
+    if ((m_leftelevatingEncoder.GetPosition() < 100.0) || (m_leftelevatingEncoder.GetPosition() > 1300.0)) {
       m_leftelevatingMotor.Set(0.25);
     } else {
       m_leftelevatingMotor.Set(1.0);
     }
-    if ((m_rightelevatingEncoder.GetPosition() < 50.0) || (m_rightelevatingEncoder.GetPosition() > 550.0)) {
+    if ((m_rightelevatingEncoder.GetPosition() < 100.0) || (m_rightelevatingEncoder.GetPosition() > 1300.0)) {
       m_rightelevatingMotor.Set(0.25);
     } else {
       m_rightelevatingMotor.Set(1.0);

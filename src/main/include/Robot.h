@@ -152,7 +152,6 @@ class Robot : public frc::TimedRobot {
 
   // Limelight
   std::shared_ptr<NetworkTable> m_table = nt::NetworkTableInstance::GetDefault().GetTable("limelight-scorpio");
-  double tx_OFFSET = 2.0; // old = 3.0
 
   // Override Shooter speed for calibration/testing
   double m_overrideShooterSpeed = 0.0;
@@ -172,7 +171,7 @@ class Robot : public frc::TimedRobot {
   // pidCoeff ----------------{kP, kI, kD, kIz, kFF, kMinOutput, kMaxOutput}
   pidCoeff m_shooterPIDCoeff {0.0005, 0.00000004, 0.03, 0.0, 0.000202, -1.0, 1.0};
   pidCoeff m_turretPIDCoeff {0.02, 0.0, 0.0, 0.0, 0.0, -0.5, 0.5};
-  pidCoeff m_raisingPIDCoeff {1.6e-4, 1e-6, 0.0, 0.0, 0.0, -1.0, 1.0};
+  pidCoeff m_raisingPIDCoeff {7.0e-4, 1e-6, 0.0, 0.0, 0.0, -1.0, 1.0};
 
   frc::Timer m_autoTimer;
 
