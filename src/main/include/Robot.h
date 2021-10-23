@@ -21,6 +21,8 @@
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
 
+#include <frc/XboxController.h>
+
 #include "rev/CANSparkMax.h"
 
 #include "Drivetrain.h"
@@ -127,7 +129,8 @@ class Robot : public frc::TimedRobot {
   // Alternate Encoder for Hopper
   rev::CANEncoder m_hopperAltEncoder = m_hopperMotor.GetAlternateEncoder(rev::CANEncoder::AlternateEncoderType::kQuadrature, 8192);
 
-  frc::Joystick m_stick{0};
+  //frc::Joystick m_stick{0};
+  frc::XboxController m_stick{0};
   
   //pneumatics//
   frc::DoubleSolenoid m_intakeleft{0, 7};

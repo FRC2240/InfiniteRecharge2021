@@ -269,6 +269,14 @@ void Robot::TeleopPeriodic()
   double move = m_stick.GetRawAxis(1);
   double rotate = m_stick.GetRawAxis(4);
 
+  double moveReverse = m_stick.GetTriggerAxis(frc::GenericHID::JoystickHand::kLeftHand);
+  double moveForward = m_stick.GetTriggerAxis(frc::GenericHID::JoystickHand::kRightHand);
+  double rotate      = m_stick.GetX(frc::GenericHID::JoystickHand::kLeftHand);
+  move = moveReverse + moveForward;
+
+  m_robotDrive.ArcadeDrive(move, rotate);
+
+
   //bool isQuickTurn = true;
   //m_robotDrive.CurvatureDrive(move, -rotate, isQuickTurn);
   m_robotDrive.ArcadeDrive(move, -0.75*rotate);
